@@ -53,22 +53,27 @@ public class UnmatchedAddressRegistry {
         return true;
     }
 
+    
     public boolean isEmpty() {
         return addresses.isEmpty() && unparsedAddresses.isEmpty();
     }
 
+    
     public boolean hasMatchedUnassignedAddresses() {
         return !addresses.isEmpty();
     }
 
+    
     public boolean hasUnparsedAddresses() {
         return !unparsedAddresses.isEmpty();
     }
 
+    
     public List<UnmatchedAddress> getAddresses() {
         return addresses;
     }
 
+    
     public List<String> getUnparsedAddresses() {
         return unparsedAddresses;
     }

@@ -43,14 +43,17 @@ public class AddressParts {
         return new AddressParts(street, houseNumber, houseLetter);
     }
 
+    
     public String getStreet() {
         return street;
     }
 
+    
     public int getHouseNumber() {
         return houseNumber;
     }
 
+    
     public String getHouseLetter() {
         return houseLetter;
     }

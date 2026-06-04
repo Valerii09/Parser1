@@ -27,6 +27,7 @@ public class ParserPresenter {
     private final CourierPaymentService courierPaymentService;
     private final XmlPaymentPdfGenerationService xmlPaymentPdfGenerationService;
 
+    
     public ParserPresenter(
         ParserView view,
         ParserTaskRunner taskRunner,
@@ -61,10 +62,12 @@ public class ParserPresenter {
         this.xmlPaymentPdfGenerationService = xmlPaymentPdfGenerationService;
     }
 
+    
     public void clearLog() {
         view.clearLog();
     }
 
+    
     public void createCourierAddresses() {
         taskRunner.run(() -> {
             Path excelPath = getRequiredPath(
@@ -87,6 +90,7 @@ public class ParserPresenter {
         });
     }
 
+    
     public void createCourierPdfs() {
         taskRunner.run(() -> {
             Path pdfFolder = getRequiredPath(
@@ -112,6 +116,7 @@ public class ParserPresenter {
         });
     }
 
+    
     public void createPdfFromXml() {
         taskRunner.run(() -> {
             Path xmlFolder = getRequiredPath(

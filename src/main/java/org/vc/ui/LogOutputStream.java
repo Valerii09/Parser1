@@ -17,10 +17,12 @@ public class LogOutputStream extends OutputStream {
     private final JTextArea textArea;
     private final ByteArrayOutputStream buffer = new ByteArrayOutputStream();
 
+    
     public LogOutputStream(JTextArea textArea) {
         this.textArea = textArea;
     }
 
+    
     @Override
     public void write(int value) {
         if (value == '\n') {
@@ -30,6 +32,7 @@ public class LogOutputStream extends OutputStream {
         }
     }
 
+    
     @Override
     public void flush() {
         flushBuffer();

@@ -15,6 +15,11 @@ public class CourierPaymentPdfParser {
 
     private static final String COURIERS_FOLDER_NAME = "Курьеры";
 
+    /**
+     * Точка входа для запуска сценария.
+     *
+     * @param args аргументы командной строки
+     */
     public static void main(String[] args) throws IOException {
         if (args.length == 0) {
             throw new IllegalArgumentException("Передайте путь к папке с PDF-файлами первым аргументом");

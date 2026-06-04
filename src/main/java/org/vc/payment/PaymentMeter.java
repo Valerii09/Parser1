@@ -24,6 +24,7 @@ public class PaymentMeter {
     private final String increasingRatio;
     private final String communalNorm;
 
+    
     public PaymentMeter(
         String serviceName,
         String unit,
@@ -58,62 +59,77 @@ public class PaymentMeter {
         this.communalNorm = communalNorm;
     }
 
+    
     public String getServiceName() {
         return serviceName;
     }
 
+    
     public String getUnit() {
         return unit;
     }
 
+    
     public String getMeterNumber() {
         return meterNumber;
     }
 
+    
     public String getPreviousValue() {
         return previousValue;
     }
 
+    
     public String getCurrentValue() {
         return currentValue;
     }
 
+    
     public String getConsumption() {
         return consumption;
     }
 
+    
     public String getCommunalMeterNumber() {
         return communalMeterNumber;
     }
 
+    
     public String getCommunalPreviousValue() {
         return communalPreviousValue;
     }
 
+    
     public String getCommunalCurrentValue() {
         return communalCurrentValue;
     }
 
+    
     public String getCommunalConsumption() {
         return communalConsumption;
     }
 
+    
     public String getHousePremiseVolume() {
         return housePremiseVolume;
     }
 
+    
     public String getHouseCommonVolume() {
         return houseCommonVolume;
     }
 
+    
     public String getIndividualNorm() {
         return individualNorm;
     }
 
+    
     public String getIncreasingRatio() {
         return increasingRatio;
     }
 
+    
     public String getCommunalNorm() {
         return communalNorm;
     }

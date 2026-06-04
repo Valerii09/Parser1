@@ -47,6 +47,11 @@ public class UnparsedAddressTypeAnalyzer {
         "переулок"
     );
 
+    /**
+     * Точка входа для запуска сценария.
+     *
+     * @param args аргументы командной строки
+     */
     public static void main(String[] args) throws IOException {
         Path inputFile = resolveInputFile(args);
         Path outputFile = inputFile.getParent().resolve(OUTPUT_FILE_NAME);

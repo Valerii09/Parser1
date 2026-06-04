@@ -12,6 +12,7 @@ import java.util.Comparator;
  */
 public class CourierPageComparator implements Comparator<CourierPage> {
 
+    
     @Override
     public int compare(CourierPage firstPage, CourierPage secondPage) {
         PaymentAddressParts first = firstPage.getAddressParts();

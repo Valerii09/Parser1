@@ -19,6 +19,11 @@ public class CourierAddressParser {
 
     private static final String OUTPUT_ROOT_FOLDER = "Курьеры";
 
+    /**
+     * Точка входа для запуска сценария.
+     *
+     * @param args аргументы командной строки
+     */
     public static void main(String[] args) throws IOException {
         if (args.length == 0) {
             throw new IllegalArgumentException("Передайте путь к Excel-файлу первым аргументом");

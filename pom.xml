@@ -6,7 +6,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.vc</groupId>
-    <artifactId>Parser1</artifactId>
+    <artifactId>payment-courier-tool</artifactId>
     <version>1.0-SNAPSHOT</version>
 
     <properties>
@@ -48,7 +48,7 @@
     </dependencies>
 
     <build>
-        <finalName>courier-parser</finalName>
+        <finalName>payment-courier-tool</finalName>
 
         <plugins>
             <plugin>
@@ -73,10 +73,10 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration>
-                            <finalName>courier-parser</finalName>
+                            <finalName>payment-courier-tool</finalName>
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>org.vc.ui.ParserApp</mainClass>
+                                    <mainClass>org.vc.ui.PaymentCourierToolApp</mainClass>
                                 </transformer>
                             </transformers>
                         </configuration>

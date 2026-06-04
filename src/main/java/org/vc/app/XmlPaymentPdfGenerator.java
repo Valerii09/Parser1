@@ -14,9 +14,14 @@ public class XmlPaymentPdfGenerator {
 
     private static final int DEFAULT_MAX_PAGES_PER_FILE = 1000;
 
+    /**
+     * Точка входа для запуска сценария.
+     *
+     * @param args аргументы командной строки
+     */
     public static void main(String[] args) throws Exception {
         if (args.length < 2) {
-            System.out.println("Использование: java -cp courier-parser.jar org.vc.app.XmlPaymentPdfGenerator <xml-файл> <папка-результата> [страниц-в-файле]");
+            System.out.println("Использование: java -cp payment-courier-tool.jar org.vc.app.XmlPaymentPdfGenerator <xml-файл> <папка-результата> [страниц-в-файле]");
             return;
         }
 

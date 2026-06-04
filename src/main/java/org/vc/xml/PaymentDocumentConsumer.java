@@ -13,5 +13,10 @@ import java.io.IOException;
 @FunctionalInterface
 public interface PaymentDocumentConsumer {
 
+    /**
+     * Принимает платёжный документ для дальнейшей обработки.
+     *
+     * @param paymentDocument платёжный документ
+     */
     void accept(PaymentDocument paymentDocument) throws IOException;
 }

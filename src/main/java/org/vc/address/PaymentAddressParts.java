@@ -12,18 +12,7 @@ import java.util.regex.Pattern;
  */
 public class PaymentAddressParts {
 
-    private static final String STREET_TYPE_PATTERN =
-        "ул\\.?|улица|"
-            + "пр-кт|проспект|просп\\.?|пр\\.?|"
-            + "пер\\.?|переулок|"
-            + "ш\\.?|шоссе|"
-            + "проезд|"
-            + "пл\\.?|площадь|"
-            + "б-р|бульвар|"
-            + "наб\\.?|набережная|"
-            + "мкр\\.?|микрорайон|"
-            + "пос\\.?|поселок|посёлок|"
-            + "тракт";
+    private static final String STREET_TYPE_PATTERN = AddressPatterns.STREET_TYPE_PATTERN;
 
     private static final Pattern ADDRESS_PATTERN = Pattern.compile(
         "(?iu).*?\\b(" + STREET_TYPE_PATTERN + ")\\s*(.+?)" +
@@ -172,33 +161,47 @@ public class PaymentAddressParts {
     }
 
     private static PaymentAddressParts empty() {
-        return new PaymentAddressParts("", "", Integer.MAX_VALUE, "", "", Integer.MAX_VALUE, true);
+        return new PaymentAddressParts("",
+            "",
+            Integer.MAX_VALUE,
+            "",
+            "",
+            Integer.MAX_VALUE,
+            true
+        );
     }
 
+    
     public String getCity() {
         return city;
     }
 
+    
     public String getStreet() {
         return street;
     }
 
+    
     public int getHouseNumber() {
         return houseNumber;
     }
 
+    
     public String getHouseLetter() {
         return houseLetter;
     }
 
+    
     public String getCorpus() {
         return corpus;
     }
 
+    
     public int getFlatNumber() {
         return flatNumber;
     }
 
+    
     public boolean isEmpty() {
         return empty;
     }

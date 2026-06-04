@@ -26,6 +26,7 @@ public class PaymentCharge {
     private final String executorInn;
     private final String executorKpp;
 
+    
     public PaymentCharge(
         String serviceName,
         String unit,
@@ -55,6 +56,7 @@ public class PaymentCharge {
         );
     }
 
+    
     public PaymentCharge(
         String serviceName,
         String unit,
@@ -93,70 +95,87 @@ public class PaymentCharge {
         this.executorKpp = executorKpp;
     }
 
+    
     public String getServiceName() {
         return serviceName;
     }
 
+    
     public String getUnit() {
         return unit;
     }
 
+    
     public String getVolume() {
         return volume;
     }
 
+    
     public String getCommunalVolume() {
         return communalVolume;
     }
 
+    
     public String getTariff() {
         return tariff;
     }
 
+    
     public String getIndividualAmount() {
         return individualAmount;
     }
 
+    
     public String getCommunalAmount() {
         return communalAmount;
     }
 
+    
     public String getChargedAmount() {
         return chargedAmount;
     }
 
+    
     public String getRecalculationCode() {
         return recalculationCode;
     }
 
+    
     public String getRecalculationReason() {
         return recalculationReason;
     }
 
+    
     public String getRecalculationAmount() {
         return recalculationAmount;
     }
 
+    
     public String getDebtAmount() {
         return debtAmount;
     }
 
+    
     public String getTotalAmount() {
         return totalAmount;
     }
 
+    
     public String getExecutorName() {
         return executorName;
     }
 
+    
     public String getExecutorAddress() {
         return executorAddress;
     }
 
+    
     public String getExecutorInn() {
         return executorInn;
     }
 
+    
     public String getExecutorKpp() {
         return executorKpp;
     }

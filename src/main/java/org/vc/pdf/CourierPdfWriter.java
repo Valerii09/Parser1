@@ -314,22 +314,27 @@ public class CourierPdfWriter {
             this.lastAddress = lastAddress;
         }
 
+        
         public String getCourierName() {
             return courierName;
         }
 
+        
         public int getInputPagesCount() {
             return inputPagesCount;
         }
 
+        
         public int getOutputPagesCount() {
             return outputPagesCount;
         }
 
+        
         public String getFirstAddress() {
             return firstAddress;
         }
 
+        
         public String getLastAddress() {
             return lastAddress;
         }

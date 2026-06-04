@@ -69,6 +69,7 @@ public class ParserFrame extends JFrame implements ParserView {
     private final ParserTaskRunner taskRunner;
     private final ParserPresenter presenter;
 
+    
     public ParserFrame() {
         super("Courier Parser");
 
@@ -217,36 +218,43 @@ public class ParserFrame extends JFrame implements ParserView {
         logPanel.redirectSystemOutput();
     }
 
+    
     @Override
     public String getSelectedExcelPath() {
         return excelChooserPanel.getSelectedPath();
     }
 
+    
     @Override
     public String getSelectedPdfFolderPath() {
         return pdfFolderChooserPanel.getSelectedPath();
     }
 
+    
     @Override
     public String getSelectedXmlFolderPath() {
         return xmlFolderChooserPanel.getSelectedPath();
     }
 
+    
     @Override
     public String getSelectedXmlOutputFolderPath() {
         return xmlOutputFolderChooserPanel.getSelectedPath();
     }
 
+    
     @Override
     public boolean isDuplexPrintingSelected() {
         return duplexPrintingCheckBox.isSelected();
     }
 
+    
     @Override
     public void clearLog() {
         logPanel.clear();
     }
 
+    
     @Override
     public void showError(String message) {
         SwingUtilities.invokeLater(() ->

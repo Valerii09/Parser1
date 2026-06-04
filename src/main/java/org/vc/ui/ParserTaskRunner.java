@@ -14,6 +14,7 @@ public class ParserTaskRunner {
     private final ParserView view;
     private final AtomicBoolean running = new AtomicBoolean(false);
 
+    
     public ParserTaskRunner(ParserView view) {
         this.view = view;
     }
@@ -23,7 +24,7 @@ public class ParserTaskRunner {
      */
     public void run(ParserTask task) {
         if (!running.compareAndSet(false, true)) {
-            System.out.println("?????? ??? ???????????, ????????? ?????????? ??????? ????????.");
+            System.out.println("Задача уже выполняется, дождитесь завершения текущей операции.");
             Toolkit.getDefaultToolkit().beep();
             return;
         }
@@ -45,7 +46,13 @@ public class ParserTaskRunner {
         thread.start();
     }
 
+    /**
+     * Контракт фоновой задачи.
+     */
     public interface ParserTask {
+        /**
+         * Выполняет фоновую задачу.
+         */
         void run() throws Exception;
     }
 }

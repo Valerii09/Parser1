@@ -16,10 +16,12 @@ public class UnmatchedAddress {
     private final String corpus;
     private final String index;
 
+    
     public UnmatchedAddress(String city, String street, String houseNumber, String corpus) {
         this(city, street, houseNumber, corpus, "");
     }
 
+    
     public UnmatchedAddress(String city, String street, String houseNumber, String corpus, String index) {
         this.city = city;
         this.street = street;
@@ -28,26 +30,32 @@ public class UnmatchedAddress {
         this.index = index;
     }
 
+    
     public String getCity() {
         return city;
     }
 
+    
     public String getStreet() {
         return street;
     }
 
+    
     public String getHouseNumber() {
         return houseNumber;
     }
 
+    
     public String getCorpus() {
         return corpus;
     }
 
+    
     public String getIndex() {
         return index;
     }
 
+    
     public String getFullAddress() {
         StringBuilder result = new StringBuilder();
 
@@ -62,6 +70,7 @@ public class UnmatchedAddress {
         return result.toString();
     }
 
+    
     @Override
     public boolean equals(Object object) {
         if (this == object) {
@@ -77,6 +86,7 @@ public class UnmatchedAddress {
             && Objects.equals(index, that.index);
     }
 
+    
     @Override
     public int hashCode() {
         return Objects.hash(city, street, houseNumber, corpus, index);

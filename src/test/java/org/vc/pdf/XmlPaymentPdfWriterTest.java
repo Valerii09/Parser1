@@ -39,7 +39,7 @@ class XmlPaymentPdfWriterTest {
 
             assertEquals(
                 "Адрес помещения: 664000, обл Иркутская, г. Иркутск, тер. СНТ. Восход, кв.28",
-                writer.formatDeliveryAddress(sourceAddress)
+                PaymentAddressPrintFormatter.format(sourceAddress)
             );
         }
     }
@@ -51,7 +51,7 @@ class XmlPaymentPdfWriterTest {
 
             assertEquals(
                 "Адрес доставки: 664009, обл Иркутская, г. Иркутск, проезд Космический, дом № 5",
-                writer.formatDeliveryAddress(sourceAddress)
+                PaymentAddressPrintFormatter.format(sourceAddress)
             );
         }
     }
@@ -63,7 +63,7 @@ class XmlPaymentPdfWriterTest {
 
             assertEquals(
                 "Адрес доставки: 664009, обл Иркутская, г. Иркутск, ул. Ленина, дом № 1",
-                writer.formatDeliveryAddress(sourceAddress)
+                PaymentAddressPrintFormatter.format(sourceAddress)
             );
         }
     }

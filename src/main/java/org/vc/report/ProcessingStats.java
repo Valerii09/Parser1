@@ -26,62 +26,81 @@ public class ProcessingStats {
 
     private final Map<String, Integer> pagesByCourier = new LinkedHashMap<>();
 
+    /**
+     * Устанавливает значение.
+     *
+     * @param foundPdfFiles новое значение
+     */
     public void setFoundPdfFiles(int foundPdfFiles) {
         this.foundPdfFiles = foundPdfFiles;
     }
 
+    
     public void incrementProcessedPdfFiles() {
         processedPdfFiles++;
     }
 
+    
     public void addTotalPdfPages(int pages) {
         totalPdfPages += pages;
     }
 
+    
     public void addPaymentDocuments(int documents) {
         totalPaymentDocuments += documents;
     }
 
+    
     public void incrementProcessedPages() {
         processedPages++;
     }
 
+    
     public void incrementPagesWithoutAddress() {
         pagesWithoutAddress++;
     }
 
+    
     public void incrementMatchedPages() {
         matchedPages++;
     }
 
+    
     public void incrementUnmatchedPages() {
         unmatchedPages++;
     }
 
+    
     public void incrementUnmatchedPagesWrittenToReport() {
         unmatchedPagesWrittenToReport++;
     }
 
+    
     public void incrementUnmatchedPagesSkippedFromReport() {
         unmatchedPagesSkippedFromReport++;
     }
 
+    
     public void incrementCreatedCourierPdfFiles() {
         incrementCreatedCourierPdfFiles(1);
     }
 
+    
     public void incrementCreatedCourierPdfFiles(int count) {
         createdCourierPdfFiles += count;
     }
 
+    
     public void addWrittenPages(int pages) {
         writtenPages += pages;
     }
 
+    
     public void addCourierPage(String courierName) {
         pagesByCourier.merge(courierName, 1, Integer::sum);
     }
 
+    
     public int getProcessedPages() {
         return processedPages;
     }

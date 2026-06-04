@@ -24,12 +24,14 @@ public class FileChooserPanel extends JPanel {
     private final JTextField pathField = new JTextField();
     private final int selectionMode;
 
+    
     public FileChooserPanel(String labelText, String buttonText, int selectionMode) {
         this.selectionMode = selectionMode;
 
         init(labelText, buttonText);
     }
 
+    
     public String getSelectedPath() {
         return pathField.getText();
     }

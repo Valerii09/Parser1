@@ -12,20 +12,24 @@ public class CourierAddressRegistryRow {
     private final int paymentDocumentsCount;
     private final String courierName;
 
+    
     public CourierAddressRegistryRow(String address, int paymentDocumentsCount, String courierName) {
         this.address = address;
         this.paymentDocumentsCount = paymentDocumentsCount;
         this.courierName = courierName;
     }
 
+    
     public String getAddress() {
         return address;
     }
 
+    
     public int getPaymentDocumentsCount() {
         return paymentDocumentsCount;
     }
 
+    
     public String getCourierName() {
         return courierName;
     }

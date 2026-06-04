@@ -13,6 +13,7 @@ public class PaymentRecipient {
     private final String description;
     private final String amount;
 
+    
     public PaymentRecipient(String name, String account, String description, String amount) {
         this.name = name;
         this.account = account;
@@ -20,18 +21,22 @@ public class PaymentRecipient {
         this.amount = amount;
     }
 
+    
     public String getName() {
         return name;
     }
 
+    
     public String getAccount() {
         return account;
     }
 
+    
     public String getDescription() {
         return description;
     }
 
+    
     public String getAmount() {
         return amount;
     }

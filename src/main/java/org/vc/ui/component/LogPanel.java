@@ -24,10 +24,12 @@ public class LogPanel extends JPanel {
 
     private final JTextArea logArea = new JTextArea();
 
+    
     public LogPanel() {
         init();
     }
 
+    
     public void clear() {
         logArea.setText("");
     }

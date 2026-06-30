@@ -48,6 +48,21 @@ public class AddressExtractor {
         Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE | Pattern.DOTALL
     );
 
+    private static final Pattern YAROBLVODOKANAL_PATTERN = Pattern.compile(
+        "Яроблводоканал",
+        Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+    );
+
+    private final PaymentSupplier supplier;
+
+    public AddressExtractor() {
+        this(PaymentSupplier.AUTO);
+    }
+
+    public AddressExtractor(PaymentSupplier supplier) {
+        this.supplier = supplier == null ? PaymentSupplier.AUTO : supplier;
+    }
+
     /**
      * Возвращает первый адрес из текста страницы или пустую строку, если адрес не найден.
      */
@@ -68,9 +83,20 @@ public class AddressExtractor {
      * Если такого поля нет, используется первый запасной вариант {@code Адрес:}.</p>
      */
     public List<String> extractAddresses(String pageText) {
+        if (isYaroblvodokanalPage(pageText)) {
+            String address = extractFirstByPattern(ADDRESS_PATTERN, pageText);
+
+            return address.isEmpty() ? List.of() : List.of(address);
+        }
+
         List<String> paymentDocuments = splitPaymentDocuments(pageText);
 
         return extractAddressesFromPaymentDocuments(paymentDocuments);
+    }
+
+    private boolean isYaroblvodokanalPage(String pageText) {
+        return supplier == PaymentSupplier.YAROBLVODOKANAL
+            || (supplier == PaymentSupplier.AUTO && YAROBLVODOKANAL_PATTERN.matcher(pageText).find());
     }
 
     private List<String> splitPaymentDocuments(String pageText) {

@@ -1,0 +1,264 @@
+@page {
+    size: A4 portrait;
+    margin: 18px 18px 14px 18px;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    color: #000;
+}
+
+.payment-document {
+    page-break-after: always;
+    font-size: 7.2px;
+    line-height: 1.1;
+}
+
+.payment-document:last-child {
+    page-break-after: auto;
+}
+
+.header-layout {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    min-height: 142px;
+}
+
+.header-layout td {
+    border: 0;
+    vertical-align: top;
+}
+
+.title-block {
+    width: 120px;
+}
+
+.qr-block {
+    width: 305px;
+}
+
+.delivery-address {
+    width: auto;
+}
+
+.document-title,
+.period {
+    font-weight: 700;
+    font-size: 11px;
+    line-height: 1.2;
+}
+
+.qr-item {
+    display: inline-block;
+    white-space: nowrap;
+    margin-right: 18px;
+}
+
+.qr-caption {
+    display: inline-block;
+    width: 18px;
+    font-size: 6.6px;
+    line-height: 1.05;
+    text-align: center;
+    vertical-align: top;
+}
+
+.qr-image {
+    display: inline-block;
+    width: 108px;
+    height: 108px;
+    border: 2px solid #000;
+    vertical-align: top;
+}
+
+.delivery-address {
+    font-size: 10px;
+    line-height: 1.15;
+    text-align: right;
+}
+
+.consumer-layout {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 4px;
+    font-size: 8px;
+}
+
+.consumer-layout td {
+    border: 0;
+    vertical-align: bottom;
+}
+
+.consumer-label {
+    width: 78px;
+}
+
+.payment-hint {
+    width: 270px;
+    text-align: right;
+    font-weight: 700;
+    font-size: 9px;
+}
+
+h2 {
+    margin: 6px 0 2px 0;
+    font-size: 8.8px;
+    line-height: 1.05;
+}
+
+.payment-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.payment-table th,
+.payment-table td {
+    border: 0.85px solid #000;
+    padding: 2px 3px;
+    vertical-align: top;
+}
+
+.payment-table th {
+    background: #d9d9d9;
+    text-align: center;
+    font-weight: 700;
+}
+
+.recipients-table th:nth-child(1),
+.recipients-table td:nth-child(1) {
+    width: 205px;
+}
+
+.recipients-table th:nth-child(3),
+.recipients-table td:nth-child(3) {
+    width: 150px;
+    text-align: center;
+}
+
+.recipient-name,
+.executor-row {
+    font-weight: 700;
+}
+
+.recipient-details {
+    line-height: 1.15;
+}
+
+.recipient-account {
+    font-weight: 700;
+    margin-bottom: 3px;
+}
+
+.charges-table {
+    font-size: 6.35px;
+}
+
+.charges-table th,
+.charges-table td {
+    text-align: center;
+    padding: 1px 2px;
+}
+
+.charges-table td:first-child,
+.charges-table .executor-row td,
+.charges-table .paid-row td:first-child {
+    text-align: left;
+}
+
+.charges-table .executor-row td {
+    background: #c0c0c0;
+    font-weight: 700;
+}
+
+.charges-table .service-name {
+    text-align: left;
+}
+
+.recalculation-legend {
+    margin-top: 1px;
+    font-size: 6.6px;
+}
+
+.meters-table {
+    font-size: 6.35px;
+}
+
+.meters-table th,
+.meters-table td {
+    text-align: center;
+    padding: 1px 2px;
+}
+
+.meters-table td:first-child {
+    text-align: left;
+}
+
+.meter-number {
+    font-size: 5.4px;
+    line-height: 1.05;
+}
+
+.bottom-reference {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 4px;
+    font-size: 7px;
+}
+
+.bottom-reference td {
+    border: 0;
+    vertical-align: top;
+}
+
+.reference-left {
+    width: 230px;
+    padding-right: 12px;
+}
+
+.reference-left div {
+    margin-bottom: 3px;
+}
+
+.reference-left span {
+    float: right;
+}
+
+.reference-text {
+    font-weight: 700;
+    line-height: 1.15;
+}
+
+.dense {
+    font-size: 6.5px;
+}
+
+.dense .qr-image {
+    width: 96px;
+    height: 96px;
+}
+
+.dense .header-layout {
+    min-height: 126px;
+}
+
+.dense h2 {
+    margin-top: 4px;
+    font-size: 8px;
+}
+
+.dense .charges-table,
+.dense .meters-table {
+    font-size: 5.75px;
+}
+
+.dense .payment-table th,
+.dense .payment-table td {
+    padding: 1px 2px;
+}

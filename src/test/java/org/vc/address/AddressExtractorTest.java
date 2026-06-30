@@ -203,4 +203,26 @@ class AddressExtractorTest {
         );
     }
 
+    @Test
+    void shouldExtractSingleYaroblvodokanalAddressFromRepeatedReceiptBlocks() {
+        AddressExtractor yaroblvodokanalExtractor = new AddressExtractor(PaymentSupplier.YAROBLVODOKANAL);
+        String pageText = """
+            ГП ЯО "Яроблводоканал", ИНН 7610012391, 152901, г. Рыбинск, Волжская набережная, д.10 к оплате до 15.07.26
+            СЧЕТ 062675026061 за Июнь 2026 г.
+            ЛИЦЕВОЙ СЧЕТ: 75026061
+            Адрес: Расплетина, 7, кв.5
+            Плательщик: Белов С.А. Счетчик 1 х.в. 4 г.в.
+            ВСЕГО К ОПЛАТЕ: 37,15 р.
+            К В И Т А Н Ц И Я за Июнь 2026 г.
+            ЛИЦЕВОЙ СЧЕТ: 75026061
+            Плательщик: Белов С.А. Адрес: Расплетина, 7, кв.5
+            Кол-во прож.: 3 Кол-во собственников: 1 Кол-во льготников: 0
+            """;
+
+        assertEquals(
+            List.of("Расплетина, 7, кв.5"),
+            yaroblvodokanalExtractor.extractAddresses(pageText)
+        );
+    }
+
 }

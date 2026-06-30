@@ -131,4 +131,41 @@ class AddressNormalizerTest {
             AddressNormalizer.removeExtraBuildingSuffix("улакадемикагубкина1/11в")
         );
     }
+
+    @Test
+    void shouldKeepCorpusInHouseCompareKey() {
+        assertEquals(
+            "юбилейная54к3",
+            AddressNormalizer.normalizeHouseAddressForCompare("Юбилейная д. 54 корп. 3")
+        );
+
+        assertEquals(
+            "юбилейная54к3",
+            AddressNormalizer.normalizeHouseAddressForCompare("Юбилейная, 54 корп.3, кв.45")
+        );
+    }
+
+    @Test
+    void shouldNormalizeReverseCorpusInHouseCompareKey() {
+        assertEquals(
+            "бородулина13ак2",
+            AddressNormalizer.normalizeHouseAddressForCompare("Бородулина, 13а, 2 корпус, кв.3")
+        );
+    }
+
+    @Test
+    void shouldRemoveRoomFlatFromHouseCompareKey() {
+        assertEquals(
+            "борисарукавицына6",
+            AddressNormalizer.normalizeHouseAddressForCompare("Бориса Рукавицына, 6, кв.комн.94")
+        );
+    }
+
+    @Test
+    void shouldRemoveCorpusForFallback() {
+        assertEquals(
+            "юбилейная54",
+            AddressNormalizer.removeExtraBuildingSuffix("юбилейная54к3")
+        );
+    }
 }

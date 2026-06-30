@@ -1,0 +1,112 @@
+<section class="payment-document ${densityClass}">
+    <table class="header-layout">
+        <tr>
+            <td class="title-block">
+                <div class="document-title">Платежный документ</div>
+                <div class="period">${period}</div>
+            </td>
+            <td class="qr-block">${qrCodes}</td>
+            <td class="delivery-address">${deliveryAddress}</td>
+        </tr>
+    </table>
+
+    <table class="consumer-layout">
+        <tr>
+            <td class="consumer-label"><b>Потребитель:</b></td>
+            <td>${payerName}</td>
+            <td class="payment-hint">Оплата по QR-коду — это быстро, удобно, надежно!</td>
+        </tr>
+    </table>
+
+    <h2>Информация для внесения платы получателю платежа (получателям платежей)</h2>
+    <table class="payment-table recipients-table">
+        <thead>
+        <tr>
+            <th>Исполнитель услуг</th>
+            <th>Реквизиты Получателя для зачисления платежей</th>
+            <th>Итого к оплате, руб.</th>
+        </tr>
+        </thead>
+        <tbody>
+        ${recipientRows}
+        </tbody>
+    </table>
+
+    <h2>Расчет размера платы за жилищно-коммунальные услуги</h2>
+    <table class="payment-table charges-table">
+        <thead>
+        <tr>
+            <th rowspan="2">Виды услуг</th>
+            <th rowspan="2">долг(+)/ переплата (-)<br/>на начало</th>
+            <th rowspan="2">Ед. изм.</th>
+            <th colspan="2">Объем услуг</th>
+            <th rowspan="2">Тариф<br/>руб/ед.изм</th>
+            <th colspan="2">Размер платы, руб.</th>
+            <th rowspan="2">Начислено за расчет. период, руб.</th>
+            <th rowspan="2">Размер превышения платы по повышающему коэффициенту, руб.</th>
+            <th colspan="2">Перерасчеты</th>
+            <th rowspan="2">Итого начислено в расч. периоде, руб.</th>
+        </tr>
+        <tr>
+            <th>индив. потребление</th>
+            <th>общедомовые нужды</th>
+            <th>индив. потребление</th>
+            <th>общедомовые нужды</th>
+            <th>Код основания</th>
+            <th>Сумма, руб.<br/>(доначисл.,+ снятия -)</th>
+        </tr>
+        </thead>
+        <tbody>
+        ${chargeRows}
+        </tbody>
+    </table>
+    ${recalculationLegend}
+
+    <h2>Справочная информация</h2>
+    <table class="payment-table meters-table">
+        <thead>
+        <tr>
+            <th rowspan="4">Вид прибора/услуги</th>
+            <th rowspan="4">Ед. изм.</th>
+            <th colspan="6">Сведения о приборах учета (ПУ)</th>
+            <th colspan="2">Суммарный объем в доме</th>
+            <th colspan="3">Нормы потребления</th>
+        </tr>
+        <tr>
+            <th colspan="3">индивидуальные</th>
+            <th colspan="3">общедомовые</th>
+            <th rowspan="3">в помещениях дома</th>
+            <th rowspan="3">на общие нужды дома</th>
+            <th colspan="2">индив. потребление</th>
+            <th rowspan="3">общедом. нужды</th>
+        </tr>
+        <tr>
+            <th>пред. показания</th>
+            <th>текущие показания</th>
+            <th>расход</th>
+            <th>пред. показания</th>
+            <th>текущие показания</th>
+            <th>расход</th>
+            <th>норматив</th>
+            <th>повыш коэф-т</th>
+        </tr>
+        </thead>
+        <tbody>
+        ${meterRows}
+        </tbody>
+    </table>
+
+    <table class="bottom-reference">
+        <tr>
+            <td class="reference-left">
+                <div>Кол-во жильцов: <span>${residentsCount}</span></div>
+                <div>Кол-во комнат: <span>${roomsCount}</span></div>
+                <div>Площадь жилого помещения, м2: <span>${flatArea}</span></div>
+                <div>Площадь всех жилых и нежил. помещений дома, м2: <span>${houseArea}</span></div>
+                <div>Площадь ОИ по ЭЭ / Площадь ОИ по ГВ, м2: <span>${commonAreas}</span></div>
+                <div>Площадь доли ОИ ЭЭ/Площадь доли ОИ ГВ, м2: <span>${commonShares}</span></div>
+            </td>
+            <td class="reference-text">${referenceText}</td>
+        </tr>
+    </table>
+</section>

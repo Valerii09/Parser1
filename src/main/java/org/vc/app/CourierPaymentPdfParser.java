@@ -1,5 +1,6 @@
 package org.vc.app;
 
+import org.vc.address.PaymentSupplier;
 import org.vc.service.CourierPaymentService;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -31,7 +32,10 @@ public class CourierPaymentPdfParser {
             "Documents",
             COURIERS_FOLDER_NAME
         );
+        PaymentSupplier supplier = args.length > 1
+            ? PaymentSupplier.fromName(args[1])
+            : PaymentSupplier.AUTO;
 
-        new CourierPaymentService().process(pdfFolder, couriersRoot);
+        new CourierPaymentService().process(pdfFolder, couriersRoot, false, supplier);
     }
 }

@@ -8,6 +8,7 @@ import org.apache.pdfbox.io.MemoryUsageSetting;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.vc.address.AddressExtractor;
+import org.vc.address.PaymentSupplier;
 import org.vc.pdf.CourierPage;
 import org.vc.report.UnmatchedAddressExcelWriter;
 import org.vc.report.UnmatchedAddressRegistry;
@@ -32,7 +33,6 @@ import java.util.stream.Stream;
 public class CourierPaymentService {
 
     private final CourierAddressRepository addressRepository = new CourierAddressRepository();
-    private final AddressExtractor addressExtractor = new AddressExtractor();
     private final CourierMatcher courierMatcher = new CourierMatcher();
     private final PdfPageTempStorage tempStorage = new PdfPageTempStorage();
     private final CourierPdfWriter pdfWriter = new CourierPdfWriter();
@@ -42,8 +42,21 @@ public class CourierPaymentService {
      * Обрабатывает PDF-платёжки, распределяет страницы по курьерам и записывает все результаты.
      */
     public void process(Path pdfFolder, Path couriersRoot, boolean duplexPrinting) throws IOException {
+        process(pdfFolder, couriersRoot, duplexPrinting, PaymentSupplier.AUTO);
+    }
+
+    /**
+     * Обрабатывает PDF-платёжки с учётом формата выбранного поставщика.
+     */
+    public void process(
+        Path pdfFolder,
+        Path couriersRoot,
+        boolean duplexPrinting,
+        PaymentSupplier supplier
+    ) throws IOException {
         ProcessingStats stats = new ProcessingStats();
         UnmatchedAddressRegistry unmatchedAddressRegistry = new UnmatchedAddressRegistry();
+        AddressExtractor addressExtractor = new AddressExtractor(supplier);
 
         Map<String, Set<String>> courierAddresses = addressRepository.readCourierAddresses(couriersRoot);
 
@@ -57,7 +70,7 @@ public class CourierPaymentService {
         Path tempRoot = Files.createTempDirectory("courier-payment-pages-");
 
         try {
-            processPdfFolder(pdfFolder, courierPages, tempRoot, stats, unmatchedAddressRegistry, duplexPrinting);
+            processPdfFolder(pdfFolder, courierPages, tempRoot, stats, unmatchedAddressRegistry, duplexPrinting, addressExtractor);
             pdfWriter.writeCourierPdfs(couriersRoot, courierPages, stats);
             unmatchedAddressExcelWriter.write(couriersRoot, unmatchedAddressRegistry);
             stats.print();
@@ -91,7 +104,8 @@ public class CourierPaymentService {
         Path tempRoot,
         ProcessingStats stats,
         UnmatchedAddressRegistry unmatchedAddressRegistry,
-        boolean duplexPrinting
+        boolean duplexPrinting,
+        AddressExtractor addressExtractor
     ) throws IOException {
         if (!Files.exists(pdfFolder)) {
             throw new IllegalStateException("Папка с PDF не найдена: " + pdfFolder);
@@ -103,7 +117,7 @@ public class CourierPaymentService {
         System.out.println("Найдено PDF-файлов: " + pdfFiles.size());
 
         for (Path pdfFile : pdfFiles) {
-            processPdfFile(pdfFile, courierPages, tempRoot, stats, unmatchedAddressRegistry, duplexPrinting);
+            processPdfFile(pdfFile, courierPages, tempRoot, stats, unmatchedAddressRegistry, duplexPrinting, addressExtractor);
         }
     }
 
@@ -128,7 +142,8 @@ public class CourierPaymentService {
         Path tempRoot,
         ProcessingStats stats,
         UnmatchedAddressRegistry unmatchedAddressRegistry,
-        boolean duplexPrinting
+        boolean duplexPrinting,
+        AddressExtractor addressExtractor
     ) throws IOException {
         System.out.println("Обрабатываю PDF: " + pdfFile);
 

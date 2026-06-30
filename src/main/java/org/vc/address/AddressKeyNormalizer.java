@@ -78,6 +78,7 @@ public final class AddressKeyNormalizer {
             .replaceAll("(?iu)\\bкв\\.?\\b", "кв")
             .replaceAll("(?iu)\\bкорпус\\b", "к")
             .replaceAll("(?iu)\\bкорп\\.?\\b", "к")
+            .replaceAll("(?iu)\\bк\\.?\\b", "к")
             .replaceAll("(?iu)\\bстроение\\b", "стр")
             .replaceAll("(?iu)\\bстр\\.?\\b", "стр")
             .replaceAll("(?iu)\\bлитера\\b", "лит")
@@ -96,7 +97,10 @@ public final class AddressKeyNormalizer {
             return "";
         }
 
-        return normalizedAddress.replaceAll("(?iu)(\\d+(?:/\\d+)?)[а-я]$", "$1");
+        return normalizedAddress
+            .replaceAll("(?iu)(\\d+(?:/\\d+)?)(?:к|стр)[а-я\\d]+$", "$1")
+            .replaceAll("(?iu)(\\d+(?:/\\d+)?[а-я]?)(?:к|стр)[а-я\\d]+$", "$1")
+            .replaceAll("(?iu)(\\d+(?:/\\d+)?)[а-я]$", "$1");
     }
 
     /**
@@ -112,8 +116,9 @@ public final class AddressKeyNormalizer {
 
         address = address
             .replaceAll("(?iu)(\\d+)\\s*/\\s*(?:лит\\.?|литера)\\s*\\.?\\s*([а-яa-z]).*$", "$1$2")
-            .replaceAll("(?iu)(\\d+)\\s*/\\s*(?:корпус|корп\\.?)\\s*([а-яa-z\\d]+)", "$1")
-            .replaceAll("(?iu)(?:,|/)\\s*(?:корпус|корп\\.?|к\\.?)\\s*[а-яa-z\\d]+", "")
+            .replaceAll("(?iu)(\\d+\\s*[а-яa-z]?)\\s*,\\s*([а-яa-z\\d]+)\\s*(?:корпус|корп\\.?)\\b", "$1 корп. $2")
+            .replaceAll("(?iu)(\\d+)\\s*/\\s*(?:корпус|корп\\.?)\\s*([а-яa-z\\d]+)", "$1 корп. $2")
+            .replaceAll("(?iu)(?:,|/)\\s*(?:корпус|корп\\.?|к\\.?)\\s*([а-яa-z\\d]+)", " корп. $1")
             .replaceAll("(?iu)(\\d+\\s*[а-яa-z])\\s*\\.\\s*[а-яa-z]\\b", "$1")
             .replaceAll("(?iu)(\\d+\\s*[а-яa-z]?)\\s*/\\s*(?!(?:\\d+|лит\\.?|литера|корпус|корп\\.?)\\b)[^,\\s]+", "$1")
             .trim();
@@ -151,6 +156,7 @@ public final class AddressKeyNormalizer {
         }
 
         return AddressCleaner.cleanup(address)
+            .replaceAll("(?iu)[,\\s]*(?:кв\\.?\\s*комн\\.?|комн\\.?)\\s*\\d+[а-яa-z]?\\b.*$", "")
             .replaceAll("(?iu)[,\\s]*(?:к\\s*в\\.?|квартира)\\s*\\d+[а-яa-z]?(?:\\s*к\\.?\\s*\\d+)?\\b.*$", "")
             .trim();
     }

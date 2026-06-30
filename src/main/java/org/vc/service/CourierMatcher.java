@@ -111,7 +111,7 @@ public class CourierMatcher {
             return false;
         }
 
-        return address.matches("(?iu).*(\\bкорпус\\b|\\bкорп\\.?\\b|[,/]\\s*к\\.\\s*[а-яa-z\\d]+).*");
+        return address.matches("(?iu).*(\\bкорпус\\s*[а-яa-z\\d]*\\b|\\bкорп\\.?\\s*[а-яa-z\\d]*\\b|[,/]\\s*к\\.\\s*[а-яa-z\\d]+).*");
     }
 
     private void logFound(String pdfHouseAddress, String courierName, String pdfAddress) {

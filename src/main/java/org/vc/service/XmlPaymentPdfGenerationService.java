@@ -1,6 +1,6 @@
 package org.vc.service;
 
-import org.vc.pdf.XmlPaymentPdfWriter;
+import org.vc.pdf.XmlPaymentHtmlPdfWriter;
 import org.vc.xml.XmlPaymentDocumentParser;
 
 import javax.xml.stream.XMLStreamException;
@@ -13,9 +13,6 @@ import java.util.stream.Stream;
 
 /**
  * Координирует генерацию PDF-платёжек из XML.
- *
- * @author Valerii Trufanov
- * @since 03.06.2026
  */
 public class XmlPaymentPdfGenerationService {
 
@@ -24,8 +21,8 @@ public class XmlPaymentPdfGenerationService {
     /**
      * Создаёт PDF-файлы из XML, разбивая результат на части.
      */
-    public int generate(Path xmlFile, Path outputFolder, int maxPagesPerFile) throws IOException, XMLStreamException {
-        try (XmlPaymentPdfWriter writer = new XmlPaymentPdfWriter(outputFolder, maxPagesPerFile)) {
+    public int generate(Path xmlFile, Path outputFolder, int maxDocumentsPerFile) throws IOException, XMLStreamException {
+        try (XmlPaymentHtmlPdfWriter writer = new XmlPaymentHtmlPdfWriter(outputFolder, maxDocumentsPerFile)) {
             int parsedDocuments = parser.parse(xmlFile, writer::write);
 
             System.out.println("Прочитано платёжек из XML: " + parsedDocuments);
@@ -38,7 +35,7 @@ public class XmlPaymentPdfGenerationService {
     /**
      * Создаёт PDF-файлы для всех XML из выбранной папки.
      */
-    public int generateFromFolder(Path xmlFolder, Path outputRoot, int maxPagesPerFile) throws IOException, XMLStreamException {
+    public int generateFromFolder(Path xmlFolder, Path outputRoot, int maxDocumentsPerFile) throws IOException, XMLStreamException {
         List<Path> xmlFiles = findXmlFiles(xmlFolder);
         int totalDocuments = 0;
 
@@ -56,7 +53,7 @@ public class XmlPaymentPdfGenerationService {
             System.out.println("Обработка XML: " + xmlFile);
             System.out.println("Папка PDF: " + xmlOutputFolder);
 
-            totalDocuments += generate(xmlFile, xmlOutputFolder, maxPagesPerFile);
+            totalDocuments += generate(xmlFile, xmlOutputFolder, maxDocumentsPerFile);
         }
 
         System.out.println("Всего сформировано платёжек из XML: " + totalDocuments);

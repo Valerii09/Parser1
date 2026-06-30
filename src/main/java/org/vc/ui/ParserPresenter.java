@@ -1,5 +1,6 @@
 package org.vc.ui;
 
+import org.vc.address.PaymentSupplier;
 import org.vc.excel.CourierExcelReader;
 import org.vc.repository.CourierAddressWriter;
 import org.vc.service.CourierPaymentService;
@@ -106,14 +107,38 @@ public class ParserPresenter {
             System.out.println("Папка с PDF: " + pdfFolder);
             System.out.println("Папка курьеров: " + couriersRoot);
 
+            refreshCourierAddressesIfExcelSelected();
+
             boolean duplexPrinting = view.isDuplexPrintingSelected();
+            PaymentSupplier supplier = view.getSelectedPaymentSupplier();
 
             System.out.println("Двусторонняя печать: " + (duplexPrinting ? "да" : "нет"));
+            System.out.println("Поставщик PDF: " + supplier.getDisplayName());
 
-            courierPaymentService.process(pdfFolder, couriersRoot, duplexPrinting);
+            courierPaymentService.process(pdfFolder, couriersRoot, duplexPrinting, supplier);
 
             System.out.println("PDF по курьерам сформированы");
         });
+    }
+
+    private void refreshCourierAddressesIfExcelSelected() throws Exception {
+        String excelPathValue = view.getSelectedExcelPath();
+        if (excelPathValue == null || excelPathValue.isBlank()) {
+            return;
+        }
+
+        Path excelPath = Paths.get(excelPathValue.trim());
+        if (!Files.exists(excelPath)) {
+            throw new IllegalStateException("Excel-файл не найден: " + excelPath);
+        }
+
+        System.out.println("Обновление адресов курьеров из Excel перед сортировкой...");
+        System.out.println("Excel: " + excelPath);
+
+        Map<String, Set<String>> courierAddresses = courierExcelReader.readCourierAddresses(excelPath);
+        courierAddressWriter.write(couriersRoot, courierAddresses);
+
+        System.out.println("Адреса курьеров обновлены из Excel");
     }
 
     

@@ -32,6 +32,14 @@ public class AddressParser {
         "(?iu)\\b(?:д\\.?|дом)\\s*(?:№\\s*)?(" + HOUSE_NUMBER_PATTERN + ")\\b"
     );
 
+    private static final Pattern STREET_NAME_WITH_HOUSE_PATTERN = Pattern.compile(
+        "(?iu)^(.+?)(?:\\s|,)+\\s*(" + HOUSE_NUMBER_PATTERN + ")(?:\\s|,|$)"
+    );
+
+    private static final Pattern CORPUS_AFTER_HOUSE_PATTERN = Pattern.compile(
+        "(?iu)(?:^|[,\\s]+)(?:(?:корпус|корп\\.?|к\\.?)\\s*([а-яa-z\\d]+)|([а-яa-z\\d]+)\\s*(?:корпус|корп\\.?))\\b"
+    );
+
     private static final Pattern STREET_WITHOUT_HOUSE_PATTERN = Pattern.compile(
         "(?iu)\\b(" + STREET_TYPE_PATTERN + ")\\s+(.+)$"
     );
@@ -88,7 +96,7 @@ public class AddressParser {
             String streetName = AddressNormalizer.cleanupStreetName(streetWithHouseMatcher.group(2));
             String house = normalizeHouse(streetWithHouseMatcher.group(3));
 
-            return streetType + " " + streetName + " д. " + house;
+            return streetType + " " + streetName + " д. " + house + extractCorpus(value, streetWithHouseMatcher.end(3));
         }
 
         Matcher houseMatcher = HOUSE_PATTERN.matcher(value);
@@ -98,7 +106,17 @@ public class AddressParser {
 
             String street = extractStreetWithoutHouse(beforeHouse);
             if (!street.isEmpty()) {
-                return street + " д. " + house;
+                return street + " д. " + house + extractCorpus(value, houseMatcher.end(1));
+            }
+        }
+
+        Matcher streetNameWithHouseMatcher = STREET_NAME_WITH_HOUSE_PATTERN.matcher(value);
+        if (streetNameWithHouseMatcher.find()) {
+            String streetName = AddressNormalizer.cleanupStreetName(streetNameWithHouseMatcher.group(1));
+            String house = normalizeHouse(streetNameWithHouseMatcher.group(2));
+
+            if (!streetName.isEmpty()) {
+                return streetName + " д. " + house + extractCorpus(value, streetNameWithHouseMatcher.end(2));
             }
         }
 
@@ -129,5 +147,19 @@ public class AddressParser {
         return house
             .replaceAll("\\s+", "")
             .toUpperCase(Locale.ROOT);
+    }
+
+    private String extractCorpus(String value, int fromIndex) {
+        if (value == null || fromIndex >= value.length()) {
+            return "";
+        }
+
+        Matcher matcher = CORPUS_AFTER_HOUSE_PATTERN.matcher(value.substring(fromIndex));
+        if (!matcher.find()) {
+            return "";
+        }
+
+        String corpus = matcher.group(1) != null ? matcher.group(1) : matcher.group(2);
+        return " корп. " + normalizeHouse(corpus);
     }
 }

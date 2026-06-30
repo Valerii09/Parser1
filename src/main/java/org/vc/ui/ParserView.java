@@ -1,5 +1,7 @@
 package org.vc.ui;
 
+import org.vc.address.PaymentSupplier;
+
 /**
  * Контракт представления главного окна парсера.
  *
@@ -32,6 +34,11 @@ public interface ParserView {
      * Возвращает признак включённой двусторонней печати.
      */
     boolean isDuplexPrintingSelected();
+
+    /**
+     * Возвращает выбранный формат поставщика PDF.
+     */
+    PaymentSupplier getSelectedPaymentSupplier();
 
     /**
      * Очищает область лога.

@@ -1,11 +1,13 @@
 package org.vc.ui;
 
+import org.vc.address.PaymentSupplier;
 import org.vc.ui.component.FileChooserPanel;
 import org.vc.ui.component.LogPanel;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -65,6 +67,7 @@ public class ParserFrame extends JFrame implements ParserView {
         JFileChooser.DIRECTORIES_ONLY
     );
     private final JCheckBox duplexPrintingCheckBox = new JCheckBox("Двусторонняя печать");
+    private final JComboBox<PaymentSupplier> supplierComboBox = new JComboBox<>(PaymentSupplier.values());
     private final LogPanel logPanel = new LogPanel();
     private final ParserTaskRunner taskRunner;
     private final ParserPresenter presenter;
@@ -150,18 +153,27 @@ public class ParserFrame extends JFrame implements ParserView {
         constraints.gridy = 3;
         card.add(xmlOutputFolderChooserPanel, constraints);
 
+        JPanel supplierPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
+        supplierPanel.setOpaque(false);
+        supplierPanel.add(new JLabel("Поставщик PDF:"));
+        supplierPanel.add(supplierComboBox);
+
+        constraints.gridy = 4;
+        constraints.insets = new Insets(4, 8, 10, 4);
+        card.add(supplierPanel, constraints);
+
         duplexPrintingCheckBox.setOpaque(false);
         duplexPrintingCheckBox.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 13));
         duplexPrintingCheckBox.setText("Двусторонняя печать — добавлять к платёжке следующую страницу без распознавания");
 
-        constraints.gridy = 4;
+        constraints.gridy = 5;
         constraints.insets = new Insets(4, 8, 10, 4);
         card.add(duplexPrintingCheckBox, constraints);
 
         JLabel resultLabel = new JLabel("Результат будет сохранён в: " + couriersRoot);
         resultLabel.setForeground(new Color(90, 90, 90));
 
-        constraints.gridy = 5;
+        constraints.gridy = 6;
         constraints.insets = new Insets(4, 8, 2, 4);
         card.add(resultLabel, constraints);
 
@@ -246,6 +258,16 @@ public class ParserFrame extends JFrame implements ParserView {
     @Override
     public boolean isDuplexPrintingSelected() {
         return duplexPrintingCheckBox.isSelected();
+    }
+
+    
+    @Override
+    public PaymentSupplier getSelectedPaymentSupplier() {
+        Object selectedItem = supplierComboBox.getSelectedItem();
+
+        return selectedItem instanceof PaymentSupplier paymentSupplier
+            ? paymentSupplier
+            : PaymentSupplier.AUTO;
     }
 
     

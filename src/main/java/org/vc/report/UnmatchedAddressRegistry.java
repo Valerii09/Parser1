@@ -28,14 +28,14 @@ public class UnmatchedAddressRegistry {
     /**
      * Добавляет адрес без привязки к исходному файлу.
      */
-    public boolean add(String rawAddress) {
+    public synchronized boolean add(String rawAddress) {
         return add(rawAddress, null);
     }
 
     /**
      * Добавляет адрес и возвращает признак успешного разбора.
      */
-    public boolean add(String rawAddress, Path pdfFile) {
+    public synchronized boolean add(String rawAddress, Path pdfFile) {
         PaymentAddressParts addressParts = PaymentAddressParts.parse(rawAddress);
 
         if (addressParts.isEmpty()) {
@@ -58,49 +58,49 @@ public class UnmatchedAddressRegistry {
     /**
      * Запоминает платёжку, где адрес вообще не удалось найти в тексте PDF.
      */
-    public void addMissingAddressDocument(Path pdfFile, int pageNumber, String pageText) {
+    public synchronized void addMissingAddressDocument(Path pdfFile, int pageNumber, String pageText) {
         missingAddressDocuments.add(formatMissingAddressDocument(pdfFile, pageNumber, pageText));
     }
 
     
-    public boolean isEmpty() {
+    public synchronized boolean isEmpty() {
         return addresses.isEmpty() && unparsedAddresses.isEmpty() && missingAddressDocuments.isEmpty();
     }
 
     
-    public boolean hasMatchedUnassignedAddresses() {
+    public synchronized boolean hasMatchedUnassignedAddresses() {
         return !addresses.isEmpty();
     }
 
     
-    public boolean hasUnparsedAddresses() {
+    public synchronized boolean hasUnparsedAddresses() {
         return !unparsedAddresses.isEmpty();
     }
 
     
-    public boolean hasMissingAddressDocuments() {
+    public synchronized boolean hasMissingAddressDocuments() {
         return !missingAddressDocuments.isEmpty();
     }
 
     
-    public List<UnmatchedAddress> getAddresses() {
-        return addresses;
+    public synchronized List<UnmatchedAddress> getAddresses() {
+        return List.copyOf(addresses);
     }
 
     
-    public List<String> getUnparsedAddresses() {
-        return unparsedAddresses;
+    public synchronized List<String> getUnparsedAddresses() {
+        return List.copyOf(unparsedAddresses);
     }
 
     
-    public List<String> getMissingAddressDocuments() {
-        return missingAddressDocuments;
+    public synchronized List<String> getMissingAddressDocuments() {
+        return List.copyOf(missingAddressDocuments);
     }
 
     /**
      * Возвращает количество квартир, учтённых для каждого нераспределённого адреса.
      */
-    public Map<UnmatchedAddress, Integer> getFlatCountByAddress() {
+    public synchronized Map<UnmatchedAddress, Integer> getFlatCountByAddress() {
         Map<UnmatchedAddress, Integer> result = new LinkedHashMap<>();
 
         for (UnmatchedAddress address : addresses) {

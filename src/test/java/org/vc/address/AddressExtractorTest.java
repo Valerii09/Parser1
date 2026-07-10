@@ -11,6 +11,20 @@ class AddressExtractorTest {
     private final AddressExtractor extractor = new AddressExtractor();
 
     @Test
+    void shouldKeepShelekhovDistrictInFactorialAddress() {
+        String pageText = """
+            ООО "Факториал Восток"
+            г.Иркутск, 1-й КВАРТАЛ. ШЕЛЕХОВ, д. 6, кв. 13
+            ИЗВЕЩЕНИЕ ДОМОФОННАЯ СИСТЕМА "ФАКТОРИАЛ"
+            """;
+
+        assertEquals(
+            List.of("г.Шелехов, кв-л 1-й, д. 6"),
+            extractor.extractAddresses(pageText)
+        );
+    }
+
+    @Test
     void shouldExtractFactorialInlineAddresses() {
         AddressExtractor factorialExtractor = new AddressExtractor(PaymentSupplier.FACTORIAL);
 
@@ -309,6 +323,19 @@ class AddressExtractorTest {
         assertEquals(
             List.of("Расплетина, 7, кв.5"),
             yaroblvodokanalExtractor.extractAddresses(pageText)
+        );
+    }
+
+    @Test
+    void shouldRestoreTruncatedShelekhovAvenueName() {
+        String pageText = """
+            ООО "Факториал Восток"
+            г.Иркутск, СТРОИТ и МОНТАЖН ПР. г.ШЕЛЕХОВ, д. 6, кв. 47
+            """;
+
+        assertEquals(
+            List.of("г.Шелехов, пр строителей и монтажников, д. 6"),
+            extractor.extractAddresses(pageText)
         );
     }
 

@@ -13,6 +13,18 @@ class AddressParserTest {
     private final AddressParser parser = new AddressParser();
 
     @Test
+    void shouldParseStreetTypesWithTrailingDotFromCourierExcel() {
+        assertEquals(
+            List.of("б-р Постышева д. 6"),
+            parser.parseAddresses("664046, Россия, Иркутская обл., г. Иркутск, б-р. Постышева, д. 6")
+        );
+        assertEquals(
+            List.of("пр Маршала Жукова д. 12"),
+            parser.parseAddresses("664050, Россия, Иркутская обл., г. Иркутск, пр-кт. Маршала Жукова, д. 12")
+        );
+    }
+
+    @Test
     void shouldParseHouseRegistryAddressWithoutStreetType() {
         assertEquals(
             List.of("50 лет ВЛКСМ д. 26"),

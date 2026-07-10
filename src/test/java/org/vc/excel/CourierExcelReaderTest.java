@@ -48,10 +48,13 @@ class CourierExcelReaderTest {
         Map<String, Set<String>> result = new CourierExcelReader().readCourierAddresses(excel);
 
         assertTrue(result.containsKey("ЗУ 10"));
-        assertEquals(1, result.get("ЗУ 10").size());
-        assertEquals(
-            "перспортивный5а",
-            AddressNormalizer.normalizeHouseAddressForCompare(result.get("ЗУ 10").iterator().next())
+        assertEquals(2, result.get("ЗУ 10").size());
+        assertTrue(
+            result.get("ЗУ 10").stream().allMatch(
+                address -> "перспортивный5а".equals(
+                    AddressNormalizer.normalizeHouseAddressForCompare(address)
+                )
+            )
         );
     }
 }

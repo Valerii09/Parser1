@@ -1,0 +1,4 @@
+interface:
+  display_name: "Сборка desktop-релиза"
+  short_description: "Проверка, JAR, EXE и ZIP приложения"
+  default_prompt: "Используй $build-desktop-release для проверенной сборки JAR, EXE и ZIP."

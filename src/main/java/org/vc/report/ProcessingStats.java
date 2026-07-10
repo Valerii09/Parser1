@@ -31,108 +31,108 @@ public class ProcessingStats {
      *
      * @param foundPdfFiles новое значение
      */
-    public void setFoundPdfFiles(int foundPdfFiles) {
+    public synchronized void setFoundPdfFiles(int foundPdfFiles) {
         this.foundPdfFiles = foundPdfFiles;
     }
 
     
-    public void incrementProcessedPdfFiles() {
+    public synchronized void incrementProcessedPdfFiles() {
         processedPdfFiles++;
     }
 
     
-    public void addTotalPdfPages(int pages) {
+    public synchronized void addTotalPdfPages(int pages) {
         totalPdfPages += pages;
     }
 
     
-    public void addPaymentDocuments(int documents) {
+    public synchronized void addPaymentDocuments(int documents) {
         totalPaymentDocuments += documents;
     }
 
     
-    public void incrementProcessedPages() {
+    public synchronized void incrementProcessedPages() {
         addProcessedPages(1);
     }
 
-    public void addProcessedPages(int pages) {
+    public synchronized void addProcessedPages(int pages) {
         processedPages += pages;
     }
 
     
-    public void incrementPagesWithoutAddress() {
+    public synchronized void incrementPagesWithoutAddress() {
         pagesWithoutAddress++;
     }
 
     
-    public void incrementMatchedPages() {
+    public synchronized void incrementMatchedPages() {
         addMatchedPages(1);
     }
 
-    public void addMatchedPages(int pages) {
+    public synchronized void addMatchedPages(int pages) {
         matchedPages += pages;
     }
 
     
-    public void incrementUnmatchedPages() {
+    public synchronized void incrementUnmatchedPages() {
         addUnmatchedPages(1);
     }
 
-    public void addUnmatchedPages(int pages) {
+    public synchronized void addUnmatchedPages(int pages) {
         unmatchedPages += pages;
     }
 
     
-    public void incrementUnmatchedPagesWrittenToReport() {
+    public synchronized void incrementUnmatchedPagesWrittenToReport() {
         addUnmatchedPagesWrittenToReport(1);
     }
 
-    public void addUnmatchedPagesWrittenToReport(int pages) {
+    public synchronized void addUnmatchedPagesWrittenToReport(int pages) {
         unmatchedPagesWrittenToReport += pages;
     }
 
     
-    public void incrementUnmatchedPagesSkippedFromReport() {
+    public synchronized void incrementUnmatchedPagesSkippedFromReport() {
         addUnmatchedPagesSkippedFromReport(1);
     }
 
-    public void addUnmatchedPagesSkippedFromReport(int pages) {
+    public synchronized void addUnmatchedPagesSkippedFromReport(int pages) {
         unmatchedPagesSkippedFromReport += pages;
     }
 
     
-    public void incrementCreatedCourierPdfFiles() {
+    public synchronized void incrementCreatedCourierPdfFiles() {
         incrementCreatedCourierPdfFiles(1);
     }
 
     
-    public void incrementCreatedCourierPdfFiles(int count) {
+    public synchronized void incrementCreatedCourierPdfFiles(int count) {
         createdCourierPdfFiles += count;
     }
 
     
-    public void addWrittenPages(int pages) {
+    public synchronized void addWrittenPages(int pages) {
         writtenPages += pages;
     }
 
     
-    public void addCourierPage(String courierName) {
+    public synchronized void addCourierPage(String courierName) {
         addCourierPage(courierName, 1);
     }
 
-    public void addCourierPage(String courierName, int pages) {
+    public synchronized void addCourierPage(String courierName, int pages) {
         pagesByCourier.merge(courierName, pages, Integer::sum);
     }
 
     
-    public int getProcessedPages() {
+    public synchronized int getProcessedPages() {
         return processedPages;
     }
 
     /**
      * Печатает собранную итоговую статистику в стандартный вывод.
      */
-    public void print() {
+    public synchronized void print() {
         printSummary();
         printPageProcessingCheck();
         printPageDistributionCheck();

@@ -41,6 +41,7 @@ public final class AddressKeyNormalizer {
             .replace('ё', 'е')
             .replaceAll("(?iu)\\bмаксима\\s+горького\\b", "горького")
             .replaceAll("(?iu)\\bпр-кт\\b", "пр")
+            .replaceAll("(?iu)\\bпр-т\\b", "пр")
             .replaceAll("(?iu)\\bпроспект\\b", "пр")
             .replaceAll("(?iu)\\bпросп\\.?\\b", "пр")
             .replaceAll("(?iu)\\bпр\\.?\\b", "пр")
@@ -55,6 +56,7 @@ public final class AddressKeyNormalizer {
             .replaceAll("(?iu)\\bш\\.?\\b", "ш")
 
             .replaceAll("(?iu)\\bбульвар\\b", "б-р")
+            .replaceAll("(?iu)\\bбул\\.?\\b", "б-р")
             .replaceAll("(?iu)\\bб-р\\b", "б-р")
 
             .replaceAll("(?iu)\\bнабережная\\b", "наб")
@@ -67,7 +69,10 @@ public final class AddressKeyNormalizer {
             .replaceAll("(?iu)\\bплощадь\\b", "пл")
             .replaceAll("(?iu)\\bпл\\.?\\b", "пл")
             .replaceAll("(?iu)\\bмикрорайон\\b", "мкр")
+            .replaceAll("(?iu)\\bмрн\\.?\\b", "мкр")
             .replaceAll("(?iu)\\bмкр\\.?\\b", "мкр")
+            .replaceAll("(?iu)\\bквартал\\b", "кв-л")
+            .replaceAll("(?iu)\\bкв-л\\.?\\b", "кв-л")
             .replaceAll("(?iu)\\bтракт\\b", "тракт")
             .replaceAll("(?iu)\\bпроезд\\b", "проезд")
 
@@ -152,6 +157,19 @@ public final class AddressKeyNormalizer {
     }
 
     private static String normalizeStreetTypeSuffix(String address) {
+        java.util.regex.Matcher localityMatcher = java.util.regex.Pattern.compile(
+            "(?iu)^\\s*((?:г\\.?\\s*[а-яёa-z-]+\\s*,\\s*)?)([^,]+?)\\s+("
+                + "мкр\\.?|мрн\\.?|микрорайон|кв-л\\.?|квартал"
+                + ")\\.?\\s+[а-яёa-z-]+\\s*,\\s*((?:д\\.?|дом)\\s*.*)$"
+        ).matcher(address);
+
+        if (localityMatcher.matches()) {
+            String type = StreetTypeNormalizer.normalizeStreetType(localityMatcher.group(3));
+            return localityMatcher.group(1)
+                + type + " " + localityMatcher.group(2)
+                + ", " + localityMatcher.group(4);
+        }
+
         java.util.regex.Matcher matcher = java.util.regex.Pattern.compile(
             "(?iu)^\\s*((?:г\\.?\\s*[а-яёa-z-]+\\s*,\\s*)?)([^,]+?)\\s+("
                 + AddressPatterns.STREET_TYPE_PATTERN

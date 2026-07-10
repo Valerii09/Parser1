@@ -7,6 +7,7 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.vc.address.AddressParser;
+import org.vc.address.AddressNormalizer;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -72,6 +73,10 @@ public class CourierExcelReader {
                     if (!address.isEmpty()) {
                         result.computeIfAbsent(courier, key -> new LinkedHashSet<>()).add(address);
                     }
+                }
+
+                if (!AddressNormalizer.normalizeHouseAddressForCompare(rawAddress).isEmpty()) {
+                    result.computeIfAbsent(courier, key -> new LinkedHashSet<>()).add(rawAddress);
                 }
             }
         }

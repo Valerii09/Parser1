@@ -1,0 +1,4 @@
+interface:
+  display_name: "Маршрутизация адресов"
+  short_description: "Разбор адресов и распределение по курьерам"
+  default_prompt: "Используй $maintain-address-routing для исправления разбора и распределения адресов."

@@ -12,7 +12,7 @@ import java.util.regex.Pattern;
 public class AddressParts {
 
     private static final Pattern HOUSE_PATTERN = Pattern.compile(
-        "^(.*?)(?:,?\\s*д\\.?\\s*)((?:\\d+)(?:(?!(?:к(?=орп)|б(?=лок)))[а-яА-Яa-zA-Z])?(?:(/|-)\\d+[а-яА-Яa-zA-Z]?)?|[а-яА-Яa-zA-Z]).*$",
+        "^(.*?)(?:,?\\s*\\bд\\.?\\s*)((?:\\d+)(?:(?!(?:к(?=орп)|б(?=лок)))[а-яА-Яa-zA-Z])?(?:(/|-)\\d+[а-яА-Яa-zA-Z]?)?|[а-яА-Яa-zA-Z]).*$",
         Pattern.CASE_INSENSITIVE
     );
 

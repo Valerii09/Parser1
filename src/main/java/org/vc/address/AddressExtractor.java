@@ -67,6 +67,24 @@ public class AddressExtractor {
         Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
     );
 
+    private static final Pattern FACTORIAL_INLINE_SHELEKHOV_DISTRICT_PATTERN = Pattern.compile(
+        "(?iu)(?:\\bг\\.?\\s*Иркутск\\s*,\\s*)?([А-ЯЁA-Z0-9\\-\\s]+?)\\s+"
+            + "(МКР|МРН|МИКРОРАЙОН|КВАРТАЛ|КВ-Л)\\.?\\s+ШЕЛЕХОВ\\s*,\\s*"
+            + "(?:д\\.?|дом)\\s*(?:№\\s*)?(\\d+\\s*[А-ЯЁA-Z]?(?:/\\d+)?)"
+            + "(?:\\s*,\\s*(?:корпус|корп\\.?|к\\.(?!в))\\s*([А-ЯЁA-Z0-9]+))?"
+            + "(?:\\s*,\\s*кв\\.?\\s*\\d+[А-ЯЁA-Z]?)?",
+        Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+    );
+
+    private static final Pattern FACTORIAL_INLINE_SHELEKHOV_STREET_PATTERN = Pattern.compile(
+        "(?iu)(?:\\bг\\.?\\s*Иркутск\\s*,\\s*)?([А-ЯЁA-Z0-9\\-\\s]+?)\\s+"
+            + "(ПР(?:-КТ|ОСПЕКТ)?\\.?)\\s+г\\.?\\s*ШЕЛЕХОВ\\s*,\\s*"
+            + "(?:д\\.?|дом)\\s*(?:№\\s*)?(\\d+\\s*[А-ЯЁA-Z]?(?:/\\d+)?)"
+            + "(?:\\s*,\\s*(?:корпус|корп\\.?|к\\.(?!в))\\s*([А-ЯЁA-Z0-9]+))?"
+            + "(?:\\s*,\\s*кв\\.?\\s*\\d+[А-ЯЁA-Z]?)?",
+        Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+    );
+
     private static final Pattern FACTORIAL_INLINE_LOCALITY_ADDRESS_PATTERN = Pattern.compile(
         "(?iu)(?:\\b\u0433\\.?\\s*\u0418\u0440\u043A\u0443\u0442\u0441\u043A\\s*,\\s*)?([\u0410-\u042F\u0401A-Z0-9\\-\\s]+?(?:\u0413\u041E\u0420\u041E\u0414\u041E\u041A|\u041F\u041E\u0421\u0415\u041B\u041E\u041A|\u041F\u041E\u0421\u0401\u041B\u041E\u041A|\u0421\u0415\u041B\u041E|\u0420\\.?\\s*\u041F\\.?)\\s*)"
             + "\\s*(?:\\([^)]*\\)\\s*)?(?:,\\s*)+(?:\u0434\\.?|\u0434\u043E\u043C)\\s*(?:\u2116\\s*)?(\\d+\\s*[\u0410-\u042F\u0401A-Z]?(?:/\\d+)?)"
@@ -183,6 +201,56 @@ public class AddressExtractor {
 
     private List<String> extractFactorialInlineAddresses(String pageText) {
         List<String> addresses = new ArrayList<>();
+        Matcher districtMatcher = FACTORIAL_INLINE_SHELEKHOV_DISTRICT_PATTERN.matcher(pageText);
+
+        while (districtMatcher.find()) {
+            String districtName = AddressNormalizer.cleanupStreetName(districtMatcher.group(1));
+            String districtType = AddressNormalizer.normalizeStreetType(districtMatcher.group(2));
+            String house = districtMatcher.group(3).replaceAll("\\s+", "").toUpperCase();
+            String corpus = districtMatcher.group(4);
+
+            StringBuilder address = new StringBuilder("г.Шелехов, ")
+                .append(districtType)
+                .append(" ")
+                .append(districtName)
+                .append(", д. ")
+                .append(house);
+
+            if (corpus != null && !corpus.isBlank()) {
+                address.append(", корп. ").append(corpus.trim());
+            }
+
+            addresses.add(address.toString());
+        }
+
+        if (!addresses.isEmpty()) {
+            return addresses;
+        }
+
+        Matcher shelekhovStreetMatcher = FACTORIAL_INLINE_SHELEKHOV_STREET_PATTERN.matcher(pageText);
+        while (shelekhovStreetMatcher.find()) {
+            String streetName = normalizeFactorialShelekhovStreetName(shelekhovStreetMatcher.group(1));
+            String streetType = AddressNormalizer.normalizeStreetType(shelekhovStreetMatcher.group(2));
+            String house = shelekhovStreetMatcher.group(3).replaceAll("\\s+", "").toUpperCase();
+            String corpus = shelekhovStreetMatcher.group(4);
+
+            StringBuilder address = new StringBuilder("г.Шелехов, ")
+                .append(streetType)
+                .append(" ")
+                .append(streetName)
+                .append(", д. ")
+                .append(house);
+
+            if (corpus != null && !corpus.isBlank()) {
+                address.append(", корп. ").append(corpus.trim());
+            }
+            addresses.add(address.toString());
+        }
+
+        if (!addresses.isEmpty()) {
+            return addresses;
+        }
+
         Matcher matcher = FACTORIAL_INLINE_STREET_ADDRESS_PATTERN.matcher(pageText);
 
         while (matcher.find()) {
@@ -255,6 +323,14 @@ public class AddressExtractor {
         }
 
         return locality;
+    }
+
+    private String normalizeFactorialShelekhovStreetName(String value) {
+        String normalized = AddressNormalizer.cleanupStreetName(value);
+        if (normalized.matches("(?iu).*строит.*монтажн.*")) {
+            return "строителей и монтажников";
+        }
+        return normalized;
     }
 
     private String removeSupplierBlock(String paymentDocument) {

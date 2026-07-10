@@ -7,6 +7,32 @@ import static org.junit.jupiter.api.Assertions.*;
 class PaymentAddressPartsTest {
 
     @Test
+    void shouldNormalizeStreetTypeWrittenAfterStreetName() {
+        PaymentAddressParts boulevard = PaymentAddressParts.parse("Гагарина бул., д.72, кв.1");
+        PaymentAddressParts district = PaymentAddressParts.parse("Приморский мрн., д.6, кв.1");
+
+        assertEquals("б-р гагарина", boulevard.getStreet());
+        assertEquals("мкр приморский", district.getStreet());
+    }
+
+    @Test
+    void shouldKeepDistrictNameBeforeShelekhovLocality() {
+        PaymentAddressParts quarter = PaymentAddressParts.parse(
+            "г.Иркутск, 1-й КВАРТАЛ. ШЕЛЕХОВ, д. 6, кв. 13"
+        );
+        PaymentAddressParts district = PaymentAddressParts.parse(
+            "г.Иркутск, 4-й МКР. ШЕЛЕХОВ, д. 65, кв. 109"
+        );
+        PaymentAddressParts namedDistrict = PaymentAddressParts.parse(
+            "г.Иркутск, ПРИВОКЗАЛЬНЫЙ МКР. ШЕЛЕХОВ, д. 4, кв. 30"
+        );
+
+        assertEquals("кв-л 1-й", quarter.getStreet());
+        assertEquals("мкр 4-й", district.getStreet());
+        assertEquals("мкр привокзальный", namedDistrict.getStreet());
+    }
+
+    @Test
     void shouldParseStreetTypeAfterStreetName() {
         PaymentAddressParts parts = PaymentAddressParts.parse("г.Иркутск, ЛЕРМОНТОВА УЛ., д. 136, корп. 4, кв. 1");
 

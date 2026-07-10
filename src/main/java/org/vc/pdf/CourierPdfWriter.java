@@ -18,6 +18,10 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 /**
  * Формирует PDF-файлы курьеров и сводную таблицу сортировки.
@@ -32,6 +36,15 @@ public class CourierPdfWriter {
     private static final String SUMMARY_FILE_NAME = "Итог сортировки.xlsx";
     private static final String ADDRESS_REGISTRY_FILE_NAME = "Реестр адресов.xlsx";
     private static final int MAX_PAGES_PER_FILE = 5000;
+    // TEMP_FAST_MODE: временное ускорение под срочную большую обработку.
+    // Откатить после обработки: вернуть последовательную запись и MemoryUsageSetting.setupTempFileOnly().
+    // Запись намеренно ограничена двумя потоками: большее число одновременно создаёт
+    // слишком много крупных файлов и резко увеличивает пиковый расход диска.
+    private static final boolean TEMP_FAST_MODE = true;
+    private static final int TEMP_FAST_WRITER_THREADS = Integer.getInteger(
+        "paymentCourier.fast.writerThreads",
+        2
+    );
 
     private final CourierPageComparator pageComparator = new CourierPageComparator();
     private final CourierAddressRegistryBuilder addressRegistryBuilder = new CourierAddressRegistryBuilder();
@@ -65,6 +78,7 @@ public class CourierPdfWriter {
     ) throws IOException {
         List<CourierSummaryRow> summaryRows = new ArrayList<>();
         List<CourierAddressRegistryRow> addressRegistryRows = new ArrayList<>();
+        List<CourierWriteJob> writeJobs = new ArrayList<>();
 
         for (Map.Entry<String, List<CourierPage>> entry : courierPages.entrySet()) {
             String courierName = entry.getKey();
@@ -73,7 +87,7 @@ public class CourierPdfWriter {
             List<CourierPage> pages = new ArrayList<>(entry.getValue());
 
             if (pages.isEmpty()) {
-                System.out.println("Для курьера не найдено платежек: " + courierName);
+                System.out.println("Для курьера не найдено платёжек: " + courierName);
                 continue;
             }
 
@@ -85,10 +99,7 @@ public class CourierPdfWriter {
             Path courierFolder = couriersRoot.resolve(courierName);
             Files.createDirectories(courierFolder);
 
-            int createdFilesCount = writeCourierPdfParts(courierFolder, courierName, pages);
-
-            stats.incrementCreatedCourierPdfFiles(createdFilesCount);
-            stats.addWrittenPages(outputPagesCount);
+            writeJobs.add(new CourierWriteJob(courierFolder, courierName, pages, outputPagesCount));
 
             summaryRows.add(new CourierSummaryRow(
                 courierName,
@@ -97,12 +108,16 @@ public class CourierPdfWriter {
                 pages.get(0).getAddress(),
                 pages.get(pages.size() - 1).getAddress()
             ));
+        }
+
+        for (CourierWriteResult result : writeCourierPdfJobs(writeJobs)) {
+            stats.incrementCreatedCourierPdfFiles(result.getCreatedFilesCount());
+            stats.addWrittenPages(result.getOutputPagesCount());
 
             System.out.println(
-                "Создано PDF для курьера " + courierName
-                    + ": файлов " + createdFilesCount
-                    + ", на входе сортировки: " + inputPagesCount
-                    + ", на выходе сортировки: " + outputPagesCount
+                "Создано PDF для курьера " + result.getCourierName()
+                    + ": файлов " + result.getCreatedFilesCount()
+                    + ", на выходе сортировки: " + result.getOutputPagesCount()
             );
         }
 
@@ -110,6 +125,65 @@ public class CourierPdfWriter {
         writeAddressRegistry(couriersRoot, addressRegistryRows);
     }
 
+    private List<CourierWriteResult> writeCourierPdfJobs(List<CourierWriteJob> writeJobs) throws IOException {
+        if (!TEMP_FAST_MODE || writeJobs.size() <= 1) {
+            List<CourierWriteResult> results = new ArrayList<>();
+
+            for (CourierWriteJob writeJob : writeJobs) {
+                results.add(writeCourierPdfJob(writeJob));
+            }
+
+            return results;
+        }
+
+        int threads = Math.min(TEMP_FAST_WRITER_THREADS, writeJobs.size());
+
+        System.out.println("TEMP_FAST_MODE: параллельная запись PDF курьеров, потоков: " + threads);
+
+        ExecutorService executor = Executors.newFixedThreadPool(threads);
+        List<Future<CourierWriteResult>> futures = new ArrayList<>();
+
+        for (CourierWriteJob writeJob : writeJobs) {
+            futures.add(executor.submit(() -> writeCourierPdfJob(writeJob)));
+        }
+
+        executor.shutdown();
+
+        List<CourierWriteResult> results = new ArrayList<>();
+
+        for (Future<CourierWriteResult> future : futures) {
+            try {
+                results.add(future.get());
+            } catch (InterruptedException exception) {
+                Thread.currentThread().interrupt();
+                throw new IOException("Запись PDF курьеров прервана", exception);
+            } catch (ExecutionException exception) {
+                Throwable cause = exception.getCause();
+
+                if (cause instanceof IOException ioException) {
+                    throw ioException;
+                }
+
+                throw new IOException("Ошибка параллельной записи PDF курьеров", cause);
+            }
+        }
+
+        return results;
+    }
+
+    private CourierWriteResult writeCourierPdfJob(CourierWriteJob writeJob) throws IOException {
+        int createdFilesCount = writeCourierPdfParts(
+            writeJob.getCourierFolder(),
+            writeJob.getCourierName(),
+            writeJob.getPages()
+        );
+
+        return new CourierWriteResult(
+            writeJob.getCourierName(),
+            createdFilesCount,
+            writeJob.getOutputPagesCount()
+        );
+    }
     private int countPhysicalPages(List<CourierPage> pages) {
         return pages.stream()
             .mapToInt(CourierPage::getPhysicalPagesCount)
@@ -159,11 +233,28 @@ public class CourierPdfWriter {
         Path resultPdf = courierFolder.resolve(getResultFileName(courierName, fileNumber));
 
         writePdf(resultPdf, pages);
+        deleteMergedTempFiles(pages);
 
         System.out.println(
             "Создан файл: " + resultPdf
                 + ", страниц: " + pagesCount
         );
+    }
+
+    /**
+     * Освобождает место на диске сразу после успешной сборки части курьерского PDF.
+     * Общая очистка временного каталога остаётся страховкой на случай ошибки.
+     */
+    private void deleteMergedTempFiles(List<CourierPage> pages) {
+        for (CourierPage page : pages) {
+            for (Path pageFile : page.getPageFiles()) {
+                try {
+                    Files.deleteIfExists(pageFile);
+                } catch (IOException ignored) {
+                    // В конце обработки временный каталог будет очищен целиком.
+                }
+            }
+        }
     }
 
     private void writePdf(Path resultPdf, List<CourierPage> pages) throws IOException {
@@ -177,7 +268,10 @@ public class CourierPdfWriter {
             }
         }
 
-        merger.mergeDocuments(MemoryUsageSetting.setupTempFileOnly());
+        merger.mergeDocuments(TEMP_FAST_MODE
+            ? MemoryUsageSetting.setupMainMemoryOnly()
+            : MemoryUsageSetting.setupTempFileOnly()
+        );
     }
 
     private String getResultFileName(String courierName, int fileNumber) {
@@ -310,6 +404,62 @@ public class CourierPdfWriter {
         }
 
         return Integer.parseInt(number);
+    }
+
+    private static class CourierWriteJob {
+
+        private final Path courierFolder;
+        private final String courierName;
+        private final List<CourierPage> pages;
+        private final int outputPagesCount;
+
+        private CourierWriteJob(Path courierFolder, String courierName, List<CourierPage> pages, int outputPagesCount) {
+            this.courierFolder = courierFolder;
+            this.courierName = courierName;
+            this.pages = pages;
+            this.outputPagesCount = outputPagesCount;
+        }
+
+        private Path getCourierFolder() {
+            return courierFolder;
+        }
+
+        private String getCourierName() {
+            return courierName;
+        }
+
+        private List<CourierPage> getPages() {
+            return pages;
+        }
+
+        private int getOutputPagesCount() {
+            return outputPagesCount;
+        }
+    }
+
+    private static class CourierWriteResult {
+
+        private final String courierName;
+        private final int createdFilesCount;
+        private final int outputPagesCount;
+
+        private CourierWriteResult(String courierName, int createdFilesCount, int outputPagesCount) {
+            this.courierName = courierName;
+            this.createdFilesCount = createdFilesCount;
+            this.outputPagesCount = outputPagesCount;
+        }
+
+        private String getCourierName() {
+            return courierName;
+        }
+
+        private int getCreatedFilesCount() {
+            return createdFilesCount;
+        }
+
+        private int getOutputPagesCount() {
+            return outputPagesCount;
+        }
     }
 
     private static class CourierSummaryRow {

@@ -161,6 +161,19 @@ public class PaymentAddressParts {
     }
 
     private static String normalizeStreetTypeSuffix(String address) {
+        Matcher localityMatcher = Pattern.compile(
+            "(?iu)^\\s*((?:г\\.?\\s*[а-яёa-z-]+\\s*,\\s*)?)([^,]+?)\\s+("
+                + "мкр\\.?|мрн\\.?|микрорайон|кв-л\\.?|квартал"
+                + ")\\.?\\s+[а-яёa-z-]+\\s*,\\s*((?:д\\.?|дом)\\s*.*)$"
+        ).matcher(address);
+
+        if (localityMatcher.matches()) {
+            String type = AddressNormalizer.normalizeStreetType(localityMatcher.group(3));
+            return localityMatcher.group(1)
+                + type + " " + localityMatcher.group(2)
+                + ", " + localityMatcher.group(4);
+        }
+
         Matcher matcher = Pattern.compile(
             "(?iu)^\\s*((?:г\\.?\\s*[а-яёa-z-]+\\s*,\\s*)?)([^,]+?)\\s+(" + STREET_TYPE_PATTERN + ")\\s*,\\s*((?:д\\.?|дом)\\s*.*)$"
         ).matcher(address);

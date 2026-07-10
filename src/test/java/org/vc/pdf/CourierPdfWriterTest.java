@@ -72,13 +72,14 @@ class CourierPdfWriterTest {
     void shouldSplitCourierPdfBeforeMergeBecomesTooLarge() throws Exception {
         CourierPdfWriter limitedWriter = new CourierPdfWriter(2);
         Map<String, List<CourierPage>> courierPages = new LinkedHashMap<>();
+        List<CourierPage> pages = List.of(
+            page("г. Иркутск, ул. Ленина, д. 1"),
+            page("г. Иркутск, ул. Ленина, д. 2"),
+            page("г. Иркутск, ул. Ленина, д. 3")
+        );
         courierPages.put(
             "Иркутск курьер 1",
-            List.of(
-                page("г. Иркутск, ул. Ленина, д. 1"),
-                page("г. Иркутск, ул. Ленина, д. 2"),
-                page("г. Иркутск, ул. Ленина, д. 3")
-            )
+            pages
         );
 
         limitedWriter.writeCourierPdfs(tempDir, courierPages, new ProcessingStats());
@@ -95,6 +96,8 @@ class CourierPdfWriterTest {
             assertEquals(2, getPdfPagesCount(pdfFiles.get(0)));
             assertEquals(1, getPdfPagesCount(pdfFiles.get(1)));
         }
+
+        assertTrue(pages.stream().noneMatch(page -> Files.exists(page.getPageFile())));
     }
 
     private CourierPage page(String address) throws Exception {

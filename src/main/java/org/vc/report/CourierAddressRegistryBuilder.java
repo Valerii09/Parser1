@@ -23,7 +23,9 @@ public class CourierAddressRegistryBuilder {
         Map<String, Integer> paymentCountByAddress = new LinkedHashMap<>();
 
         for (CourierPage page : pages) {
-            paymentCountByAddress.merge(getHouseAddress(page), 1, Integer::sum);
+            for (String registryAddress : page.getRegistryAddresses()) {
+                paymentCountByAddress.merge(getHouseAddress(registryAddress), 1, Integer::sum);
+            }
         }
 
         List<CourierAddressRegistryRow> rows = new ArrayList<>();
@@ -35,11 +37,11 @@ public class CourierAddressRegistryBuilder {
         return rows;
     }
 
-    private String getHouseAddress(CourierPage page) {
-        PaymentAddressParts addressParts = page.getAddressParts();
+    private String getHouseAddress(String sourceAddress) {
+        PaymentAddressParts addressParts = PaymentAddressParts.parse(sourceAddress);
 
         if (addressParts.isEmpty()) {
-            return page.getAddress();
+            return sourceAddress;
         }
 
         StringBuilder address = new StringBuilder();

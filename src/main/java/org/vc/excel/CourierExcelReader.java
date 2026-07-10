@@ -14,28 +14,29 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
 /**
- * Читает назначения курьеров из исходного Excel-файла.
- *
- * @author Valerii Trufanov
- * @since 18.05.2026
+ * Читает назначения курьеров из Excel.
+ * Поддерживает старый формат с листом «Данные» и новый формат «Путь курьера»,
+ * где заголовки находятся не в первой строке, а адрес лежит в колонке «Адрес».
  */
 public class CourierExcelReader {
 
-    private static final String SHEET_NAME = "Данные";
+    private static final String PREFERRED_SHEET_NAME = "Данные";
+    private static final int HEADER_SCAN_LIMIT = 30;
 
-    private static final String ADDRESS_COLUMN = "Полный адрес";
-    private static final String SOURCE_ADDRESS_COLUMN = "Исходный адрес";
+    private static final List<String> COURIER_COLUMNS = List.of("курьер");
+    private static final List<String> FULL_ADDRESS_COLUMNS = List.of("полный адрес", "адрес", "адреса", "исходный адрес");
+    private static final List<String> SOURCE_ADDRESS_COLUMNS = List.of("исходный адрес");
 
-    private static final String STREET_TYPE_COLUMN = "ТипУлицы";
-    private static final String STREET_COLUMN = "Улица";
-    private static final String HOUSE_COLUMN = "НомерДома";
-    private static final String CORPUS_COLUMN = "Корпус";
-
-    private static final String COURIER_COLUMN = "Курьер";
+    private static final String STREET_TYPE_COLUMN = "типулицы";
+    private static final String STREET_COLUMN = "улица";
+    private static final String HOUSE_COLUMN = "номердома";
+    private static final String CORPUS_COLUMN = "корпус";
 
     private final AddressParser addressParser = new AddressParser();
 
@@ -50,58 +51,18 @@ public class CourierExcelReader {
              Workbook workbook = new XSSFWorkbook(inputStream)) {
 
             Sheet sheet = getSheet(workbook);
-
             System.out.println("Используется лист Excel: " + sheet.getSheetName());
 
-            Row headerRow = sheet.getRow(0);
-            if (headerRow == null) {
-                throw new IllegalStateException("Не найдена строка заголовков");
-            }
+            Header header = findHeader(sheet, formatter);
 
-            int courierColumnIndex = findColumnIndex(headerRow, COURIER_COLUMN, formatter);
-
-            int addressColumnIndex = findOptionalColumnIndex(headerRow, ADDRESS_COLUMN, formatter);
-            int sourceAddressColumnIndex = findOptionalColumnIndex(headerRow, SOURCE_ADDRESS_COLUMN, formatter);
-
-            int streetTypeColumnIndex = findOptionalColumnIndex(headerRow, STREET_TYPE_COLUMN, formatter);
-            int streetColumnIndex = findOptionalColumnIndex(headerRow, STREET_COLUMN, formatter);
-            int houseColumnIndex = findOptionalColumnIndex(headerRow, HOUSE_COLUMN, formatter);
-            int corpusColumnIndex = findOptionalColumnIndex(headerRow, CORPUS_COLUMN, formatter);
-
-            boolean hasOldAddressFormat = addressColumnIndex >= 0;
-            boolean hasNewAddressFormat = streetTypeColumnIndex >= 0
-                && streetColumnIndex >= 0
-                && houseColumnIndex >= 0;
-            boolean hasSourceAddressFormat = sourceAddressColumnIndex >= 0;
-
-            if (!hasOldAddressFormat && !hasNewAddressFormat && !hasSourceAddressFormat) {
-                throw new IllegalStateException(
-                    "Не найдены колонки адреса. Нужна колонка '" + ADDRESS_COLUMN
-                        + "' или набор колонок: "
-                        + STREET_TYPE_COLUMN + ", "
-                        + STREET_COLUMN + ", "
-                        + HOUSE_COLUMN
-                );
-            }
-
-            for (int i = 1; i <= sheet.getLastRowNum(); i++) {
+            for (int i = header.rowIndex() + 1; i <= sheet.getLastRowNum(); i++) {
                 Row row = sheet.getRow(i);
                 if (row == null) {
                     continue;
                 }
 
-                String rawAddress = getAddress(
-                    row,
-                    formatter,
-                    addressColumnIndex,
-                    streetTypeColumnIndex,
-                    streetColumnIndex,
-                    houseColumnIndex,
-                    corpusColumnIndex,
-                    sourceAddressColumnIndex
-                );
-
-                String courier = getCellValue(row, courierColumnIndex, formatter);
+                String rawAddress = getAddress(row, formatter, header);
+                String courier = getCellValue(row, header.courierColumnIndex(), formatter);
 
                 if (rawAddress.isEmpty() || courier.isEmpty()) {
                     continue;
@@ -119,7 +80,7 @@ public class CourierExcelReader {
     }
 
     private Sheet getSheet(Workbook workbook) {
-        Sheet sheet = workbook.getSheet(SHEET_NAME);
+        Sheet sheet = workbook.getSheet(PREFERRED_SHEET_NAME);
 
         if (sheet == null && workbook.getNumberOfSheets() > 0) {
             sheet = workbook.getSheetAt(0);
@@ -132,59 +93,82 @@ public class CourierExcelReader {
         return sheet;
     }
 
-    private String getAddress(
-        Row row,
-        DataFormatter formatter,
-        int addressColumnIndex,
-        int streetTypeColumnIndex,
-        int streetColumnIndex,
-        int houseColumnIndex,
-        int corpusColumnIndex,
-        int sourceAddressColumnIndex
-    ) {
-        if (addressColumnIndex >= 0) {
-            String rawAddress = getCellValue(row, addressColumnIndex, formatter);
+    private Header findHeader(Sheet sheet, DataFormatter formatter) {
+        int lastCandidate = Math.min(sheet.getLastRowNum(), HEADER_SCAN_LIMIT);
+
+        for (int rowIndex = 0; rowIndex <= lastCandidate; rowIndex++) {
+            Row row = sheet.getRow(rowIndex);
+            if (row == null) {
+                continue;
+            }
+
+            int courierColumnIndex = findOptionalColumnIndex(row, COURIER_COLUMNS, formatter);
+            if (courierColumnIndex < 0) {
+                continue;
+            }
+
+            int fullAddressColumnIndex = findOptionalColumnIndex(row, FULL_ADDRESS_COLUMNS, formatter);
+            int sourceAddressColumnIndex = findOptionalColumnIndex(row, SOURCE_ADDRESS_COLUMNS, formatter);
+            int streetTypeColumnIndex = findOptionalColumnIndex(row, STREET_TYPE_COLUMN, formatter);
+            int streetColumnIndex = findOptionalColumnIndex(row, STREET_COLUMN, formatter);
+            int houseColumnIndex = findOptionalColumnIndex(row, HOUSE_COLUMN, formatter);
+            int corpusColumnIndex = findOptionalColumnIndex(row, CORPUS_COLUMN, formatter);
+
+            boolean hasFullAddress = fullAddressColumnIndex >= 0 || sourceAddressColumnIndex >= 0;
+            boolean hasStructuredAddress = streetTypeColumnIndex >= 0
+                && streetColumnIndex >= 0
+                && houseColumnIndex >= 0;
+
+            if (hasFullAddress || hasStructuredAddress) {
+                return new Header(
+                    rowIndex,
+                    courierColumnIndex,
+                    fullAddressColumnIndex,
+                    sourceAddressColumnIndex,
+                    streetTypeColumnIndex,
+                    streetColumnIndex,
+                    houseColumnIndex,
+                    corpusColumnIndex
+                );
+            }
+        }
+
+        throw new IllegalStateException(
+            "Не найдена строка заголовков Excel. Нужна колонка «Курьер» и адрес в колонке «Адрес»/«Полный адрес» "
+                + "или в колонках «ТипУлицы», «Улица», «НомерДома»."
+        );
+    }
+
+    private String getAddress(Row row, DataFormatter formatter, Header header) {
+        if (header.fullAddressColumnIndex() >= 0) {
+            String rawAddress = getCellValue(row, header.fullAddressColumnIndex(), formatter);
             if (!rawAddress.isEmpty()) {
                 return rawAddress;
             }
         }
 
-        String builtAddress = buildAddressFromColumns(
-            row,
-            formatter,
-            streetTypeColumnIndex,
-            streetColumnIndex,
-            houseColumnIndex,
-            corpusColumnIndex
-        );
+        String builtAddress = buildAddressFromColumns(row, formatter, header);
 
         if (!builtAddress.isEmpty()) {
             return builtAddress;
         }
 
-        if (sourceAddressColumnIndex >= 0) {
-            return getCellValue(row, sourceAddressColumnIndex, formatter);
+        if (header.sourceAddressColumnIndex() >= 0) {
+            return getCellValue(row, header.sourceAddressColumnIndex(), formatter);
         }
 
         return "";
     }
 
-    private String buildAddressFromColumns(
-        Row row,
-        DataFormatter formatter,
-        int streetTypeColumnIndex,
-        int streetColumnIndex,
-        int houseColumnIndex,
-        int corpusColumnIndex
-    ) {
-        if (streetTypeColumnIndex < 0 || streetColumnIndex < 0 || houseColumnIndex < 0) {
+    private String buildAddressFromColumns(Row row, DataFormatter formatter, Header header) {
+        if (header.streetTypeColumnIndex() < 0 || header.streetColumnIndex() < 0 || header.houseColumnIndex() < 0) {
             return "";
         }
 
-        String streetType = getCellValue(row, streetTypeColumnIndex, formatter);
-        String street = getCellValue(row, streetColumnIndex, formatter);
-        String house = getCellValue(row, houseColumnIndex, formatter);
-        String corpus = corpusColumnIndex >= 0 ? getCellValue(row, corpusColumnIndex, formatter) : "";
+        String streetType = getCellValue(row, header.streetTypeColumnIndex(), formatter);
+        String street = getCellValue(row, header.streetColumnIndex(), formatter);
+        String house = getCellValue(row, header.houseColumnIndex(), formatter);
+        String corpus = header.corpusColumnIndex() >= 0 ? getCellValue(row, header.corpusColumnIndex(), formatter) : "";
 
         if (streetType.isEmpty() || street.isEmpty() || house.isEmpty()) {
             return "";
@@ -204,26 +188,39 @@ public class CourierExcelReader {
         return result.toString();
     }
 
-    private int findColumnIndex(Row headerRow, String columnName, DataFormatter formatter) {
-        int columnIndex = findOptionalColumnIndex(headerRow, columnName, formatter);
+    private int findOptionalColumnIndex(Row headerRow, List<String> columnNames, DataFormatter formatter) {
+        for (String columnName : columnNames) {
+            int columnIndex = findOptionalColumnIndex(headerRow, columnName, formatter);
 
-        if (columnIndex < 0) {
-            throw new IllegalStateException("Не найдена колонка: " + columnName);
+            if (columnIndex >= 0) {
+                return columnIndex;
+            }
         }
 
-        return columnIndex;
+        return -1;
     }
 
     private int findOptionalColumnIndex(Row headerRow, String columnName, DataFormatter formatter) {
-        for (Cell cell : headerRow) {
-            String value = formatter.formatCellValue(cell).trim();
+        String expected = normalizeHeader(columnName);
 
-            if (columnName.equalsIgnoreCase(value)) {
+        for (Cell cell : headerRow) {
+            String actual = normalizeHeader(formatter.formatCellValue(cell));
+
+            if (expected.equals(actual)) {
                 return cell.getColumnIndex();
             }
         }
 
         return -1;
+    }
+
+    private String normalizeHeader(String value) {
+        return value == null
+            ? ""
+            : value.replace('\u00A0', ' ')
+                .trim()
+                .toLowerCase(Locale.ROOT)
+                .replaceAll("\\s+", "");
     }
 
     private String getCellValue(Row row, int columnIndex, DataFormatter formatter) {
@@ -237,5 +234,17 @@ public class CourierExcelReader {
         }
 
         return formatter.formatCellValue(cell).trim();
+    }
+
+    private record Header(
+        int rowIndex,
+        int courierColumnIndex,
+        int fullAddressColumnIndex,
+        int sourceAddressColumnIndex,
+        int streetTypeColumnIndex,
+        int streetColumnIndex,
+        int houseColumnIndex,
+        int corpusColumnIndex
+    ) {
     }
 }

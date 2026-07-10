@@ -19,29 +19,36 @@ public class AddressParser {
     private static final String STREET_TYPE_PATTERN = AddressPatterns.STREET_TYPE_PATTERN;
 
     private static final String HOUSE_NUMBER_PATTERN =
-        "\\d+\\s*[а-яa-z]?(?:/\\d+)?";
+        "(?:\\d+\\s*(?:(?!(?:к(?=орп)|б(?=лок)))[а-яa-z])?(?:(?:/|-)\\d+\\s*[а-яa-z]?)?|[а-яa-z])";
+
+    private static final String NUMBERED_HOUSE_PATTERN =
+        "\\d+\\s*(?:(?!(?:к(?=орп)|б(?=лок)))[а-яa-z])?(?:(?:/|-)\\d+\\s*[а-яa-z]?)?";
 
     private static final Pattern STREET_WITH_HOUSE_PATTERN = Pattern.compile(
         "(?iu)\\b(" + STREET_TYPE_PATTERN + ")\\s+(.+?)" +
             "(?:\\s|,|\\.)+\\s*(?:д\\.?|дом)?\\s*(?:№\\s*)?(" +
             HOUSE_NUMBER_PATTERN +
-            ")(?:\\s|,|$)"
+            ")(?=$|\\s|,|\\.|корпус|корп\\.?|к\\.?|блок)"
     );
 
     private static final Pattern HOUSE_PATTERN = Pattern.compile(
-        "(?iu)\\b(?:д\\.?|дом)\\s*(?:№\\s*)?(" + HOUSE_NUMBER_PATTERN + ")\\b"
+        "(?iu)\\b(?:д\\.?|дом)\\s*(?:№\\s*)?(" + HOUSE_NUMBER_PATTERN + ")(?=$|\\s|,|\\.|корпус|корп\\.?|к\\.?|блок)"
     );
 
     private static final Pattern STREET_NAME_WITH_HOUSE_PATTERN = Pattern.compile(
-        "(?iu)^(.+?)(?:\\s|,)+\\s*(" + HOUSE_NUMBER_PATTERN + ")(?:\\s|,|$)"
+        "(?iu)^(.+?)(?:\\s|,)+\\s*(" + NUMBERED_HOUSE_PATTERN + ")(?=$|\\s|,|\\.|корпус|корп\\.?|к\\.?|блок)"
     );
 
-    private static final Pattern CORPUS_AFTER_HOUSE_PATTERN = Pattern.compile(
-        "(?iu)(?:^|[,\\s]+)(?:(?:корпус|корп\\.?|к\\.?)\\s*([а-яa-z\\d]+)|([а-яa-z\\d]+)\\s*(?:корпус|корп\\.?))\\b"
+    private static final Pattern BUILDING_PART_AFTER_HOUSE_PATTERN = Pattern.compile(
+        "(?iu)(?:^|[,\\s]+)(?:(корпус|корп\\.?|к\\.?|блок)\\s*([а-яa-z\\d]+)|([а-яa-z\\d]+)\\s*(корпус|корп\\.?|к\\.?|блок))\\b"
     );
 
     private static final Pattern STREET_WITHOUT_HOUSE_PATTERN = Pattern.compile(
         "(?iu)\\b(" + STREET_TYPE_PATTERN + ")\\s+(.+)$"
+    );
+
+    private static final Pattern LOCALITY_WITHOUT_STREET_PATTERN = Pattern.compile(
+        "(?iu)\\b((?:рп|п|с|д)\\.?\\s*[а-яёa-z0-9\\-\\s]+)$"
     );
 
     /**
@@ -88,7 +95,7 @@ public class AddressParser {
             return "";
         }
 
-        String value = AddressNormalizer.cleanup(rawAddress);
+        String value = normalizeStreetTypeSuffix(AddressNormalizer.cleanup(rawAddress));
 
         Matcher streetWithHouseMatcher = STREET_WITH_HOUSE_PATTERN.matcher(value);
         if (streetWithHouseMatcher.find()) {
@@ -96,7 +103,7 @@ public class AddressParser {
             String streetName = AddressNormalizer.cleanupStreetName(streetWithHouseMatcher.group(2));
             String house = normalizeHouse(streetWithHouseMatcher.group(3));
 
-            return streetType + " " + streetName + " д. " + house + extractCorpus(value, streetWithHouseMatcher.end(3));
+            return streetType + " " + streetName + " д. " + house + extractBuildingPart(value, streetWithHouseMatcher.end(3));
         }
 
         Matcher houseMatcher = HOUSE_PATTERN.matcher(value);
@@ -106,7 +113,12 @@ public class AddressParser {
 
             String street = extractStreetWithoutHouse(beforeHouse);
             if (!street.isEmpty()) {
-                return street + " д. " + house + extractCorpus(value, houseMatcher.end(1));
+                return street + " д. " + house + extractBuildingPart(value, houseMatcher.end(1));
+            }
+
+            String locality = extractLocalityWithoutHouse(beforeHouse);
+            if (!locality.isEmpty()) {
+                return locality + " д. " + house + extractBuildingPart(value, houseMatcher.end(1));
             }
         }
 
@@ -116,7 +128,7 @@ public class AddressParser {
             String house = normalizeHouse(streetNameWithHouseMatcher.group(2));
 
             if (!streetName.isEmpty()) {
-                return streetName + " д. " + house + extractCorpus(value, streetNameWithHouseMatcher.end(2));
+                return streetName + " д. " + house + extractBuildingPart(value, streetNameWithHouseMatcher.end(2));
             }
         }
 
@@ -140,6 +152,30 @@ public class AddressParser {
         return streetType + " " + streetName;
     }
 
+    private String extractLocalityWithoutHouse(String value) {
+        String cleanedValue = AddressNormalizer.cleanup(value)
+            .replaceAll("[,\\s]+$", "");
+
+        Matcher matcher = LOCALITY_WITHOUT_STREET_PATTERN.matcher(cleanedValue);
+        if (!matcher.find()) {
+            return "";
+        }
+
+        return AddressNormalizer.cleanup(matcher.group(1));
+    }
+
+    private String normalizeStreetTypeSuffix(String address) {
+        Matcher matcher = Pattern.compile(
+            "(?iu)^\\s*(.*?,\\s*)?([^,]+?)\\s+(" + STREET_TYPE_PATTERN + ")\\s*,\\s*((?:д\\.?|дом)\\s*.*)$"
+        ).matcher(address);
+
+        if (!matcher.matches() || matcher.group(2).matches("(?iu).*\\b(" + STREET_TYPE_PATTERN + ")\\b.*")) {
+            return address;
+        }
+
+        return matcher.group(1) + matcher.group(3) + " " + matcher.group(2) + ", " + matcher.group(4);
+    }
+
     /**
      * Убирает пробелы внутри номера дома и приводит букву дома к верхнему регистру.
      */
@@ -149,17 +185,20 @@ public class AddressParser {
             .toUpperCase(Locale.ROOT);
     }
 
-    private String extractCorpus(String value, int fromIndex) {
+    private String extractBuildingPart(String value, int fromIndex) {
         if (value == null || fromIndex >= value.length()) {
             return "";
         }
 
-        Matcher matcher = CORPUS_AFTER_HOUSE_PATTERN.matcher(value.substring(fromIndex));
+        Matcher matcher = BUILDING_PART_AFTER_HOUSE_PATTERN.matcher(value.substring(fromIndex));
         if (!matcher.find()) {
             return "";
         }
 
-        String corpus = matcher.group(1) != null ? matcher.group(1) : matcher.group(2);
-        return " корп. " + normalizeHouse(corpus);
+        String type = matcher.group(1) != null ? matcher.group(1) : matcher.group(4);
+        String number = matcher.group(2) != null ? matcher.group(2) : matcher.group(3);
+        String normalizedType = type.matches("(?iu)блок") ? " блок " : " корп. ";
+
+        return normalizedType + normalizeHouse(number);
     }
 }

@@ -73,7 +73,7 @@ public class PaymentAddressParts {
             return empty();
         }
 
-        String preparedAddress = AddressNormalizer.cleanup(chooseAddressPart(address));
+        String preparedAddress = normalizeStreetTypeSuffix(AddressNormalizer.cleanup(chooseAddressPart(address)));
         Matcher matcher = ADDRESS_PATTERN.matcher(preparedAddress);
 
         if (!matcher.matches()) {
@@ -158,6 +158,18 @@ public class PaymentAddressParts {
         }
 
         return parts[parts.length - 1].trim();
+    }
+
+    private static String normalizeStreetTypeSuffix(String address) {
+        Matcher matcher = Pattern.compile(
+            "(?iu)^\\s*((?:г\\.?\\s*[а-яёa-z-]+\\s*,\\s*)?)([^,]+?)\\s+(" + STREET_TYPE_PATTERN + ")\\s*,\\s*((?:д\\.?|дом)\\s*.*)$"
+        ).matcher(address);
+
+        if (!matcher.matches() || matcher.group(2).matches("(?iu).*\\b(" + STREET_TYPE_PATTERN + ")\\b.*")) {
+            return address;
+        }
+
+        return matcher.group(1) + matcher.group(3) + " " + matcher.group(2) + ", " + matcher.group(4);
     }
 
     private static PaymentAddressParts empty() {

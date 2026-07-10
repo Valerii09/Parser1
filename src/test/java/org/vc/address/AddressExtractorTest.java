@@ -11,6 +11,93 @@ class AddressExtractorTest {
     private final AddressExtractor extractor = new AddressExtractor();
 
     @Test
+    void shouldExtractFactorialInlineAddresses() {
+        AddressExtractor factorialExtractor = new AddressExtractor(PaymentSupplier.FACTORIAL);
+
+        assertEquals(
+            List.of(
+                "г.Иркутск, ул ЛЕРМОНТОВА, д. 136, корп. 4",
+                "г.Иркутск, ул ЛЕРМОНТОВА, д. 297Б"
+            ),
+            factorialExtractor.extractAddresses("""
+                1. г.Иркутск, ЛЕРМОНТОВА УЛ., д. 136, корп. 4, кв. 1
+                2. г.Иркутск, ЛЕРМОНТОВА УЛ., д. 297Б, кв. 111
+                """)
+        );
+    }
+
+    @Test
+    void shouldExtractFactorialVillageAddressInAutoMode() {
+        AddressExtractor autoExtractor = new AddressExtractor(PaymentSupplier.AUTO);
+
+        assertEquals(
+            List.of("\u0433.\u0418\u0440\u043A\u0443\u0442\u0441\u043A, \u0443\u043B \u0414\u0410\u0427\u041D\u0410\u042F, \u0434. 1"),
+            autoExtractor.extractAddresses("""
+                \u0414\u041E\u041C\u041E\u0424\u041E\u041D\u041D\u0410\u042F \u0421\u0418\u0421\u0422\u0415\u041C\u0410 \"\u0424\u0410\u041A\u0422\u041E\u0420\u0418\u0410\u041B\" \u0418\u0417\u0412\u0415\u0429\u0415\u041D\u0418\u0415
+                \u041E\u0431\u0441\u043B\u0443\u0436\u0438\u0432\u0430\u043D\u0438\u0435 \u041E\u041E\u041E \"\u0424\u0430\u043A\u0442\u043E\u0440\u0438\u0430\u043B \u0412\u043E\u0441\u0442\u043E\u043A\" \u041C\u0435\u0441\u044F\u0446, \u0433\u043E\u0434: \u0418\u042E\u041D\u042C 2026
+                \u0433.\u0418\u0440\u043A\u0443\u0442\u0441\u043A, \u041F\u0418\u0412\u041E\u0412\u0410\u0420\u0418\u0425\u0410 \u0421\u0415\u041B\u041E, \u0414\u0410\u0427\u041D\u0410\u042F \u0423\u041B., \u0434. 1, \u043A\u0432. 1 \u041B\u0438\u0446\u0435\u0432\u043E\u0439 \u0441\u0447\u0435\u0442: 62511
+                \u0422\u0435\u043A\u0443\u0449\u0430\u044F \u0430\u0431\u043E\u043D\u0435\u043D\u0442\u0441\u043A\u0430\u044F \u043F\u043B\u0430\u0442\u0430
+                """)
+        );
+    }
+
+    @Test
+    void shouldExtractFactorialStreetAddressWithLocalNote() {
+        AddressExtractor factorialExtractor = new AddressExtractor(PaymentSupplier.FACTORIAL);
+
+        assertEquals(
+            List.of("г.Иркутск, ул АНГАРСКАЯ, д. 11"),
+            factorialExtractor.extractAddresses("""
+                ООО "Факториал Восток"
+                г.Иркутск, АНГАРСКАЯ УЛ. (Батар. ст.) , д. 11, кв. 32
+                27975 263 ИЗВЕЩЕНИЕ ДОМОФОННАЯ СИСТЕМА "ФАКТОРИАЛ"
+                """)
+        );
+    }
+
+    @Test
+    void shouldExtractFactorialLocalityAddressWithoutStreetType() {
+        AddressExtractor factorialExtractor = new AddressExtractor(PaymentSupplier.FACTORIAL);
+
+        assertEquals(
+            List.of("г.Иркутск, 2-й ГОРОДОК, д. 16"),
+            factorialExtractor.extractAddresses("""
+                ООО "Факториал Восток"
+                г.Иркутск, 2-й ГОРОДОК (Батар. ст.), д. 16, кв. 1
+                74502 1 ИЗВЕЩЕНИЕ ДОМОФОННАЯ СИСТЕМА "ФАКТОРИАЛ"
+                """)
+        );
+    }
+
+    @Test
+    void shouldExtractFactorialReverseLocalityAddress() {
+        AddressExtractor factorialExtractor = new AddressExtractor(PaymentSupplier.FACTORIAL);
+
+        assertEquals(
+            List.of("г.Иркутск, рп. МАРКОВА, д. 1"),
+            factorialExtractor.extractAddresses("""
+                ООО "Факториал Восток"
+                г.Иркутск, МАРКОВА Р.П. (Иркут. р-он), , д. 1, кв. 1
+                53127 1 ИЗВЕЩЕНИЕ ДОМОФОННАЯ СИСТЕМА "ФАКТОРИАЛ"
+                """)
+        );
+    }
+
+    @Test
+    void shouldExtractFactorialBareStreetAddress() {
+        AddressExtractor factorialExtractor = new AddressExtractor(PaymentSupplier.FACTORIAL);
+
+        assertEquals(
+            List.of("г.Иркутск, ул ЗВЕЗДИНСКАЯ, д. 26"),
+            factorialExtractor.extractAddresses("""
+                ООО "Факториал Восток"
+                г.Иркутск, ЗВЕЗДИНСКАЯ., д. 26, кв. 8
+                36711 1643 ИЗВЕЩЕНИЕ ДОМОФОННАЯ СИСТЕМА "ФАКТОРИАЛ"
+                """)
+        );
+    }
+
+    @Test
     void shouldPreferPremiseAddressOverSupplierAddress() {
         String pageText = """
             Платежный документ

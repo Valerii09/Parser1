@@ -25,6 +25,7 @@ public class UnmatchedAddressExcelWriter {
     private static final String OLD_FORMAT_FILE_NAME = "Не распределено.xlsx";
     private static final String DETAIL_FORMAT_FILE_NAME = "Не распределено_подробно.xlsx";
     private static final String UNPARSED_ADDRESSES_FILE_NAME = "Не удалось разобрать адреса.txt";
+    private static final String MISSING_ADDRESS_DOCUMENTS_FILE_NAME = "Не найден адрес в PDF.txt";
 
     private static final String DEFAULT_REGISTRY_NUMBER = "1";
     private static final int DEFAULT_ACCOUNT_COUNT = 1;
@@ -46,6 +47,10 @@ public class UnmatchedAddressExcelWriter {
         if (registry.hasUnparsedAddresses()) {
             writeUnparsedAddresses(couriersRoot, registry);
         }
+
+        if (registry.hasMissingAddressDocuments()) {
+            writeMissingAddressDocuments(couriersRoot, registry);
+        }
     }
 
     private void writeUnparsedAddresses(Path couriersRoot, UnmatchedAddressRegistry registry) throws IOException {
@@ -60,6 +65,20 @@ public class UnmatchedAddressExcelWriter {
         );
 
         System.out.println("Создан файл с адресами, которые не удалось разобрать: " + resultFile);
+    }
+
+    private void writeMissingAddressDocuments(Path couriersRoot, UnmatchedAddressRegistry registry) throws IOException {
+        Path resultFile = couriersRoot.resolve(MISSING_ADDRESS_DOCUMENTS_FILE_NAME);
+
+        Files.write(
+            resultFile,
+            registry.getMissingAddressDocuments(),
+            java.nio.charset.StandardCharsets.UTF_8,
+            StandardOpenOption.CREATE,
+            StandardOpenOption.TRUNCATE_EXISTING
+        );
+
+        System.out.println("Создан файл с платёжками без найденного адреса: " + resultFile);
     }
 
     private void writeOldFormat(Path couriersRoot, UnmatchedAddressRegistry registry) throws IOException {

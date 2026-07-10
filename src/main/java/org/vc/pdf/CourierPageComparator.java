@@ -1,6 +1,7 @@
 package org.vc.pdf;
 
 import org.vc.address.PaymentAddressParts;
+import org.vc.address.NaturalTextComparator;
 
 import java.util.Comparator;
 
@@ -28,12 +29,12 @@ public class CourierPageComparator implements Comparator<CourierPage> {
             return houseNumberCompare;
         }
 
-        int houseLetterCompare = first.getHouseLetter().compareToIgnoreCase(second.getHouseLetter());
+        int houseLetterCompare = NaturalTextComparator.compare(first.getHouseLetter(), second.getHouseLetter());
         if (houseLetterCompare != 0) {
             return houseLetterCompare;
         }
 
-        int corpusCompare = first.getCorpus().compareToIgnoreCase(second.getCorpus());
+        int corpusCompare = NaturalTextComparator.compare(first.getCorpus(), second.getCorpus());
         if (corpusCompare != 0) {
             return corpusCompare;
         }
@@ -43,6 +44,6 @@ public class CourierPageComparator implements Comparator<CourierPage> {
             return flatNumberCompare;
         }
 
-        return firstPage.getAddress().compareToIgnoreCase(secondPage.getAddress());
+        return NaturalTextComparator.compare(firstPage.getAddress(), secondPage.getAddress());
     }
 }

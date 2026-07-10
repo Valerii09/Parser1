@@ -19,9 +19,11 @@ import java.util.regex.Pattern;
 public class UnmatchedAddressRegistry {
 
     private static final Pattern INDEX_PATTERN = Pattern.compile("^(\\d{6})\\b.*");
+    private static final int MISSING_ADDRESS_TEXT_LIMIT = 1500;
 
     private final List<UnmatchedAddress> addresses = new LinkedList<>();
     private final List<String> unparsedAddresses = new LinkedList<>();
+    private final List<String> missingAddressDocuments = new LinkedList<>();
 
     /**
      * Добавляет адрес без привязки к исходному файлу.
@@ -53,9 +55,16 @@ public class UnmatchedAddressRegistry {
         return true;
     }
 
+    /**
+     * Запоминает платёжку, где адрес вообще не удалось найти в тексте PDF.
+     */
+    public void addMissingAddressDocument(Path pdfFile, int pageNumber, String pageText) {
+        missingAddressDocuments.add(formatMissingAddressDocument(pdfFile, pageNumber, pageText));
+    }
+
     
     public boolean isEmpty() {
-        return addresses.isEmpty() && unparsedAddresses.isEmpty();
+        return addresses.isEmpty() && unparsedAddresses.isEmpty() && missingAddressDocuments.isEmpty();
     }
 
     
@@ -69,6 +78,11 @@ public class UnmatchedAddressRegistry {
     }
 
     
+    public boolean hasMissingAddressDocuments() {
+        return !missingAddressDocuments.isEmpty();
+    }
+
+    
     public List<UnmatchedAddress> getAddresses() {
         return addresses;
     }
@@ -76,6 +90,11 @@ public class UnmatchedAddressRegistry {
     
     public List<String> getUnparsedAddresses() {
         return unparsedAddresses;
+    }
+
+    
+    public List<String> getMissingAddressDocuments() {
+        return missingAddressDocuments;
     }
 
     /**
@@ -118,5 +137,33 @@ public class UnmatchedAddressRegistry {
         return "Индекс: " + index
             + " | Файл: " + fileName
             + " | Адрес: " + rawAddress;
+    }
+
+    private String formatMissingAddressDocument(Path pdfFile, int pageNumber, String pageText) {
+        String fileName = pdfFile == null ? "" : pdfFile.toString();
+
+        return "Файл: " + fileName
+            + System.lineSeparator()
+            + "Страница: " + pageNumber
+            + System.lineSeparator()
+            + "Встреченный текст: " + cleanupPageText(pageText)
+            + System.lineSeparator();
+    }
+
+    private String cleanupPageText(String pageText) {
+        if (pageText == null || pageText.isBlank()) {
+            return "";
+        }
+
+        String preparedText = pageText
+            .replaceAll("[\\r\\n\\t\\u00A0]+", " ")
+            .replaceAll("\\s+", " ")
+            .trim();
+
+        if (preparedText.length() <= MISSING_ADDRESS_TEXT_LIMIT) {
+            return preparedText;
+        }
+
+        return preparedText.substring(0, MISSING_ADDRESS_TEXT_LIMIT) + "...";
     }
 }

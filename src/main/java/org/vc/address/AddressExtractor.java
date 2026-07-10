@@ -53,6 +53,35 @@ public class AddressExtractor {
         Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
     );
 
+    private static final Pattern FACTORIAL_PATTERN = Pattern.compile(
+        "\u0424\u0430\u043A\u0442\u043E\u0440\u0438\u0430\u043B",
+        Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+    );
+
+    private static final Pattern FACTORIAL_INLINE_STREET_ADDRESS_PATTERN = Pattern.compile(
+        "(?iu)(?:\\b\u0433\\.?\\s*\u0418\u0440\u043A\u0443\u0442\u0441\u043A\\s*,\\s*)?([\u0410-\u042F\u0401A-Z0-9\\-\\s]+?)\\s+("
+            + AddressPatterns.STREET_TYPE_PATTERN
+            + ")\\s*(?:\\([^)]*\\)\\s*)?,\\s*(?:\u0434\\.?|\u0434\u043E\u043C)\\s*(?:\u2116\\s*)?(\\d+\\s*[\u0410-\u042F\u0401A-Z]?(?:/\\d+)?)"
+            + "(?:\\s*,\\s*(?:\u043A\u043E\u0440\u043F\u0443\u0441|\u043A\u043E\u0440\u043F\\.?|\u043A\\.(?!\u0432))\\s*([\u0410-\u042F\u0401A-Z0-9]+))?"
+            + "(?:\\s*,\\s*\u043A\u0432\\.?\\s*\\d+[\u0410-\u042F\u0401A-Z]?)?",
+        Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+    );
+
+    private static final Pattern FACTORIAL_INLINE_LOCALITY_ADDRESS_PATTERN = Pattern.compile(
+        "(?iu)(?:\\b\u0433\\.?\\s*\u0418\u0440\u043A\u0443\u0442\u0441\u043A\\s*,\\s*)?([\u0410-\u042F\u0401A-Z0-9\\-\\s]+?(?:\u0413\u041E\u0420\u041E\u0414\u041E\u041A|\u041F\u041E\u0421\u0415\u041B\u041E\u041A|\u041F\u041E\u0421\u0401\u041B\u041E\u041A|\u0421\u0415\u041B\u041E|\u0420\\.?\\s*\u041F\\.?)\\s*)"
+            + "\\s*(?:\\([^)]*\\)\\s*)?(?:,\\s*)+(?:\u0434\\.?|\u0434\u043E\u043C)\\s*(?:\u2116\\s*)?(\\d+\\s*[\u0410-\u042F\u0401A-Z]?(?:/\\d+)?)"
+            + "(?:\\s*,\\s*(?:\u043A\u043E\u0440\u043F\u0443\u0441|\u043A\u043E\u0440\u043F\\.?|\u043A\\.(?!\u0432))\\s*([\u0410-\u042F\u0401A-Z0-9]+))?"
+            + "(?:\\s*,\\s*\u043A\u0432\\.?\\s*\\d+[\u0410-\u042F\u0401A-Z]?)?",
+        Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+    );
+
+    private static final Pattern FACTORIAL_INLINE_BARE_STREET_ADDRESS_PATTERN = Pattern.compile(
+        "(?iu)(?:\\b\u0433\\.?\\s*\u0418\u0440\u043A\u0443\u0442\u0441\u043A\\s*,\\s*)?([\u0410-\u042F\u0401A-Z][\u0410-\u042F\u0401A-Z0-9\\-\\s]+?)\\.?,\\s*(?:\u0434\\.?|\u0434\u043E\u043C)\\s*(?:\u2116\\s*)?(\\d+\\s*[\u0410-\u042F\u0401A-Z]?(?:/\\d+)?)"
+            + "(?:\\s*,\\s*(?:\u043A\u043E\u0440\u043F\u0443\u0441|\u043A\u043E\u0440\u043F\\.?|\u043A\\.(?!\u0432))\\s*([\u0410-\u042F\u0401A-Z0-9]+))?"
+            + "(?:\\s*,\\s*\u043A\u0432\\.?\\s*\\d+[\u0410-\u042F\u0401A-Z]?)?",
+        Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+    );
+
     private final PaymentSupplier supplier;
 
     public AddressExtractor() {
@@ -90,13 +119,23 @@ public class AddressExtractor {
         }
 
         List<String> paymentDocuments = splitPaymentDocuments(pageText);
+        List<String> addresses = extractAddressesFromPaymentDocuments(paymentDocuments);
 
-        return extractAddressesFromPaymentDocuments(paymentDocuments);
+        if (addresses.isEmpty() && isFactorialPage(pageText)) {
+            return extractFactorialInlineAddresses(pageText);
+        }
+
+        return addresses;
     }
 
     private boolean isYaroblvodokanalPage(String pageText) {
         return supplier == PaymentSupplier.YAROBLVODOKANAL
             || (supplier == PaymentSupplier.AUTO && YAROBLVODOKANAL_PATTERN.matcher(pageText).find());
+    }
+
+    private boolean isFactorialPage(String pageText) {
+        return supplier == PaymentSupplier.FACTORIAL
+            || (supplier == PaymentSupplier.AUTO && FACTORIAL_PATTERN.matcher(pageText).find());
     }
 
     private List<String> splitPaymentDocuments(String pageText) {
@@ -139,6 +178,83 @@ public class AddressExtractor {
         }
 
         return extractFirstByPattern(ADDRESS_PATTERN, removeSupplierBlock(paymentDocument));
+    }
+
+
+    private List<String> extractFactorialInlineAddresses(String pageText) {
+        List<String> addresses = new ArrayList<>();
+        Matcher matcher = FACTORIAL_INLINE_STREET_ADDRESS_PATTERN.matcher(pageText);
+
+        while (matcher.find()) {
+            String streetName = AddressNormalizer.cleanupStreetName(matcher.group(1));
+            String streetType = AddressNormalizer.normalizeStreetType(matcher.group(2));
+            String house = matcher.group(3).replaceAll("\\s+", "").toUpperCase();
+            String corpus = matcher.group(4);
+
+            StringBuilder address = new StringBuilder("г.Иркутск, ")
+                .append(streetType)
+                .append(" ")
+                .append(streetName)
+                .append(", д. ")
+                .append(house);
+
+            if (corpus != null && !corpus.isBlank()) {
+                address.append(", корп. ").append(corpus.trim());
+            }
+
+            addresses.add(address.toString());
+        }
+
+        Matcher localityMatcher = FACTORIAL_INLINE_LOCALITY_ADDRESS_PATTERN.matcher(pageText);
+        while (localityMatcher.find()) {
+            String locality = normalizeFactorialLocality(localityMatcher.group(1));
+            String house = localityMatcher.group(2).replaceAll("\\s+", "").toUpperCase();
+            String corpus = localityMatcher.group(3);
+
+            StringBuilder address = new StringBuilder("г.Иркутск, ")
+                .append(locality)
+                .append(", д. ")
+                .append(house);
+
+            if (corpus != null && !corpus.isBlank()) {
+                address.append(", корп. ").append(corpus.trim());
+            }
+
+            addresses.add(address.toString());
+        }
+
+        if (addresses.isEmpty()) {
+            Matcher bareStreetMatcher = FACTORIAL_INLINE_BARE_STREET_ADDRESS_PATTERN.matcher(pageText);
+            while (bareStreetMatcher.find()) {
+                String streetName = AddressNormalizer.cleanupStreetName(bareStreetMatcher.group(1));
+                String house = bareStreetMatcher.group(2).replaceAll("\\s+", "").toUpperCase();
+                String corpus = bareStreetMatcher.group(3);
+
+                StringBuilder address = new StringBuilder("г.Иркутск, ул ")
+                    .append(streetName)
+                    .append(", д. ")
+                    .append(house);
+
+                if (corpus != null && !corpus.isBlank()) {
+                    address.append(", корп. ").append(corpus.trim());
+                }
+
+                addresses.add(address.toString());
+            }
+        }
+
+        return addresses;
+    }
+
+    private String normalizeFactorialLocality(String value) {
+        String locality = AddressNormalizer.cleanupStreetName(value);
+        Matcher reverseRpMatcher = Pattern.compile("(?iu)^(.+?)\\s+\u0440\\.?\\s*\u043F\\.?$").matcher(locality);
+
+        if (reverseRpMatcher.matches()) {
+            return "\u0440\u043F. " + AddressNormalizer.cleanupStreetName(reverseRpMatcher.group(1));
+        }
+
+        return locality;
     }
 
     private String removeSupplierBlock(String paymentDocument) {

@@ -7,6 +7,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class AddressNormalizerTest {
 
     @Test
+    void shouldNormalizeStreetTypeAfterStreetName() {
+        assertEquals(
+            "уллермонтова136к4",
+            AddressNormalizer.normalizeHouseAddressForCompare("г.Иркутск, ЛЕРМОНТОВА УЛ., д. 136, корп. 4, кв. 1")
+        );
+    }
+
+    @Test
     void shouldNormalizeSimpleHouseAddress() {
         assertEquals(
             "улкирова4",

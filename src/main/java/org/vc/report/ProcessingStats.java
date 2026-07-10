@@ -52,7 +52,11 @@ public class ProcessingStats {
 
     
     public void incrementProcessedPages() {
-        processedPages++;
+        addProcessedPages(1);
+    }
+
+    public void addProcessedPages(int pages) {
+        processedPages += pages;
     }
 
     
@@ -62,22 +66,38 @@ public class ProcessingStats {
 
     
     public void incrementMatchedPages() {
-        matchedPages++;
+        addMatchedPages(1);
+    }
+
+    public void addMatchedPages(int pages) {
+        matchedPages += pages;
     }
 
     
     public void incrementUnmatchedPages() {
-        unmatchedPages++;
+        addUnmatchedPages(1);
+    }
+
+    public void addUnmatchedPages(int pages) {
+        unmatchedPages += pages;
     }
 
     
     public void incrementUnmatchedPagesWrittenToReport() {
-        unmatchedPagesWrittenToReport++;
+        addUnmatchedPagesWrittenToReport(1);
+    }
+
+    public void addUnmatchedPagesWrittenToReport(int pages) {
+        unmatchedPagesWrittenToReport += pages;
     }
 
     
     public void incrementUnmatchedPagesSkippedFromReport() {
-        unmatchedPagesSkippedFromReport++;
+        addUnmatchedPagesSkippedFromReport(1);
+    }
+
+    public void addUnmatchedPagesSkippedFromReport(int pages) {
+        unmatchedPagesSkippedFromReport += pages;
     }
 
     
@@ -97,7 +117,11 @@ public class ProcessingStats {
 
     
     public void addCourierPage(String courierName) {
-        pagesByCourier.merge(courierName, 1, Integer::sum);
+        addCourierPage(courierName, 1);
+    }
+
+    public void addCourierPage(String courierName, int pages) {
+        pagesByCourier.merge(courierName, pages, Integer::sum);
     }
 
     

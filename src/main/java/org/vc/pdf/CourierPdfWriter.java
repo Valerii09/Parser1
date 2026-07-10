@@ -35,6 +35,25 @@ public class CourierPdfWriter {
 
     private final CourierPageComparator pageComparator = new CourierPageComparator();
     private final CourierAddressRegistryBuilder addressRegistryBuilder = new CourierAddressRegistryBuilder();
+    private final int maxPagesPerFile;
+
+    /**
+     * Создаёт writer с безопасным ограничением размера одного итогового PDF.
+     *
+     * <p>Ограничение не позволяет PDFBox удерживать в памяти структуру сразу
+     * нескольких тысяч страниц во время сохранения документа.</p>
+     */
+    public CourierPdfWriter() {
+        this(MAX_PAGES_PER_FILE);
+    }
+
+    CourierPdfWriter(int maxPagesPerFile) {
+        if (maxPagesPerFile <= 0) {
+            throw new IllegalArgumentException("Количество страниц в одном PDF должно быть больше нуля");
+        }
+
+        this.maxPagesPerFile = maxPagesPerFile;
+    }
 
     /**
      * Записывает PDF-файлы курьеров и итоговую таблицу сортировки.
@@ -110,7 +129,7 @@ public class CourierPdfWriter {
             int paymentPagesCount = page.getPhysicalPagesCount();
 
             if (!currentPart.isEmpty()
-                && currentPartPagesCount + paymentPagesCount > MAX_PAGES_PER_FILE) {
+                && currentPartPagesCount + paymentPagesCount > maxPagesPerFile) {
                 createdFilesCount++;
                 writeCourierPdfPart(courierFolder, courierName, createdFilesCount, currentPart, currentPartPagesCount);
 
@@ -150,6 +169,7 @@ public class CourierPdfWriter {
     private void writePdf(Path resultPdf, List<CourierPage> pages) throws IOException {
         PDFMergerUtility merger = new PDFMergerUtility();
         merger.setDestinationFileName(resultPdf.toString());
+        merger.setDocumentMergeMode(PDFMergerUtility.DocumentMergeMode.OPTIMIZE_RESOURCES_MODE);
 
         for (CourierPage page : pages) {
             for (Path pageFile : page.getPageFiles()) {

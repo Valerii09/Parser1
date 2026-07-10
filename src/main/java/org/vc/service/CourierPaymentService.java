@@ -70,7 +70,16 @@ public class CourierPaymentService {
         Path tempRoot = Files.createTempDirectory("courier-payment-pages-");
 
         try {
-            processPdfFolder(pdfFolder, courierPages, tempRoot, stats, unmatchedAddressRegistry, duplexPrinting, addressExtractor);
+            processPdfFolder(
+                pdfFolder,
+                courierPages,
+                tempRoot,
+                stats,
+                unmatchedAddressRegistry,
+                duplexPrinting,
+                addressExtractor,
+                supplier.isFirstAddressOnly()
+            );
             pdfWriter.writeCourierPdfs(couriersRoot, courierPages, stats);
             unmatchedAddressExcelWriter.write(couriersRoot, unmatchedAddressRegistry);
             stats.print();
@@ -105,7 +114,8 @@ public class CourierPaymentService {
         ProcessingStats stats,
         UnmatchedAddressRegistry unmatchedAddressRegistry,
         boolean duplexPrinting,
-        AddressExtractor addressExtractor
+        AddressExtractor addressExtractor,
+        boolean firstAddressOnly
     ) throws IOException {
         if (!Files.exists(pdfFolder)) {
             throw new IllegalStateException("Папка с PDF не найдена: " + pdfFolder);
@@ -117,7 +127,16 @@ public class CourierPaymentService {
         System.out.println("Найдено PDF-файлов: " + pdfFiles.size());
 
         for (Path pdfFile : pdfFiles) {
-            processPdfFile(pdfFile, courierPages, tempRoot, stats, unmatchedAddressRegistry, duplexPrinting, addressExtractor);
+            processPdfFile(
+                pdfFile,
+                courierPages,
+                tempRoot,
+                stats,
+                unmatchedAddressRegistry,
+                duplexPrinting,
+                addressExtractor,
+                firstAddressOnly
+            );
         }
     }
 
@@ -143,7 +162,8 @@ public class CourierPaymentService {
         ProcessingStats stats,
         UnmatchedAddressRegistry unmatchedAddressRegistry,
         boolean duplexPrinting,
-        AddressExtractor addressExtractor
+        AddressExtractor addressExtractor,
+        boolean firstAddressOnly
     ) throws IOException {
         System.out.println("Обрабатываю PDF: " + pdfFile);
 
@@ -180,6 +200,27 @@ public class CourierPaymentService {
                 if (addresses.isEmpty()) {
                     stats.incrementProcessedPages();
                     stats.incrementPagesWithoutAddress();
+                    unmatchedAddressRegistry.addMissingAddressDocument(pdfFile, pageIndex + 1, pageText);
+                    continue;
+                }
+
+                if (firstAddressOnly) {
+                    processPaymentDocument(
+                        sourceDocument,
+                        pdfFile,
+                        pageIndex,
+                        pageCount,
+                        tempRoot,
+                        stats,
+                        unmatchedAddressRegistry,
+                        courierPages,
+                        addresses.get(0),
+                        addresses,
+                        0,
+                        1,
+                        paymentDocumentsOnPage,
+                        duplexPrinting
+                    );
                     continue;
                 }
 
@@ -194,8 +235,10 @@ public class CourierPaymentService {
                         unmatchedAddressRegistry,
                         courierPages,
                         addresses.get(paymentDocumentIndex),
+                        List.of(addresses.get(paymentDocumentIndex)),
                         paymentDocumentIndex,
                         paymentDocumentsOnPage,
+                        1,
                         duplexPrinting
                     );
                 }
@@ -213,16 +256,18 @@ public class CourierPaymentService {
         UnmatchedAddressRegistry unmatchedAddressRegistry,
         Map<String, List<CourierPage>> courierPages,
         String address,
+        List<String> registryAddresses,
         int paymentDocumentIndex,
         int paymentDocumentsOnPage,
+        int registryPaymentDocumentsCount,
         boolean duplexPrinting
     ) throws IOException {
-        stats.incrementProcessedPages();
+        stats.addProcessedPages(registryPaymentDocumentsCount);
 
         String courierName = courierMatcher.findCourierByAddress(address);
 
         if (courierName == null) {
-            registerUnmatchedAddress(address, pdfFile, stats, unmatchedAddressRegistry);
+            registerUnmatchedAddress(address, pdfFile, stats, unmatchedAddressRegistry, registryPaymentDocumentsCount);
             return;
         }
 
@@ -237,10 +282,10 @@ public class CourierPaymentService {
             duplexPrinting
         );
 
-        courierPages.get(courierName).add(new CourierPage(address, pageFiles));
+        courierPages.get(courierName).add(new CourierPage(address, pageFiles, registryAddresses));
 
-        stats.incrementMatchedPages();
-        stats.addCourierPage(courierName);
+        stats.addMatchedPages(registryPaymentDocumentsCount);
+        stats.addCourierPage(courierName, registryPaymentDocumentsCount);
     }
 
     private int getNextPaymentPageIndex(int pageIndex, boolean duplexPrinting) {
@@ -251,14 +296,15 @@ public class CourierPaymentService {
         String address,
         Path pdfFile,
         ProcessingStats stats,
-        UnmatchedAddressRegistry unmatchedAddressRegistry
+        UnmatchedAddressRegistry unmatchedAddressRegistry,
+        int paymentDocumentsCount
     ) {
-        stats.incrementUnmatchedPages();
+        stats.addUnmatchedPages(paymentDocumentsCount);
 
         if (unmatchedAddressRegistry.add(address, pdfFile)) {
-            stats.incrementUnmatchedPagesWrittenToReport();
+            stats.addUnmatchedPagesWrittenToReport(paymentDocumentsCount);
         } else {
-            stats.incrementUnmatchedPagesSkippedFromReport();
+            stats.addUnmatchedPagesSkippedFromReport(paymentDocumentsCount);
         }
     }
 

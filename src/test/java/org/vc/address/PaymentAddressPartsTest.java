@@ -7,6 +7,18 @@ import static org.junit.jupiter.api.Assertions.*;
 class PaymentAddressPartsTest {
 
     @Test
+    void shouldParseStreetTypeAfterStreetName() {
+        PaymentAddressParts parts = PaymentAddressParts.parse("г.Иркутск, ЛЕРМОНТОВА УЛ., д. 136, корп. 4, кв. 1");
+
+        assertFalse(parts.isEmpty());
+        assertEquals("иркутск", parts.getCity());
+        assertEquals("ул лермонтова", parts.getStreet());
+        assertEquals(136, parts.getHouseNumber());
+        assertEquals("4", parts.getCorpus());
+        assertEquals(1, parts.getFlatNumber());
+    }
+
+    @Test
     void shouldParseSimpleAddress() {
         PaymentAddressParts parts = PaymentAddressParts.parse("ул Кирова, д.4, кв.2");
 

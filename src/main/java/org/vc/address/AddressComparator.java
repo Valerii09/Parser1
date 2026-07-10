@@ -28,11 +28,21 @@ public class AddressComparator implements Comparator<String> {
             return houseNumberCompare;
         }
 
-        int houseLetterCompare = first.getHouseLetter().compareToIgnoreCase(second.getHouseLetter());
-        if (houseLetterCompare != 0) {
-            return houseLetterCompare;
+        int houseSuffixCompare = NaturalTextComparator.compare(first.getHouseSuffix(), second.getHouseSuffix());
+        if (houseSuffixCompare != 0) {
+            return houseSuffixCompare;
         }
 
-        return firstAddress.compareToIgnoreCase(secondAddress);
+        int corpusCompare = NaturalTextComparator.compare(first.getCorpus(), second.getCorpus());
+        if (corpusCompare != 0) {
+            return corpusCompare;
+        }
+
+        int flatNumberCompare = Integer.compare(first.getFlatNumber(), second.getFlatNumber());
+        if (flatNumberCompare != 0) {
+            return flatNumberCompare;
+        }
+
+        return NaturalTextComparator.compare(firstAddress, secondAddress);
     }
 }

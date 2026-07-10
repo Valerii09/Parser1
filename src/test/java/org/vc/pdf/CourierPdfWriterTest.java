@@ -16,6 +16,7 @@ import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -67,6 +68,35 @@ class CourierPdfWriterTest {
         }
     }
 
+    @Test
+    void shouldSplitCourierPdfBeforeMergeBecomesTooLarge() throws Exception {
+        CourierPdfWriter limitedWriter = new CourierPdfWriter(2);
+        Map<String, List<CourierPage>> courierPages = new LinkedHashMap<>();
+        courierPages.put(
+            "Иркутск курьер 1",
+            List.of(
+                page("г. Иркутск, ул. Ленина, д. 1"),
+                page("г. Иркутск, ул. Ленина, д. 2"),
+                page("г. Иркутск, ул. Ленина, д. 3")
+            )
+        );
+
+        limitedWriter.writeCourierPdfs(tempDir, courierPages, new ProcessingStats());
+
+        Path courierFolder = tempDir.resolve("Иркутск курьер 1");
+
+        try (Stream<Path> files = Files.list(courierFolder)) {
+            List<Path> pdfFiles = files
+                .filter(path -> path.getFileName().toString().endsWith(".pdf"))
+                .sorted()
+                .toList();
+
+            assertEquals(2, pdfFiles.size());
+            assertEquals(2, getPdfPagesCount(pdfFiles.get(0)));
+            assertEquals(1, getPdfPagesCount(pdfFiles.get(1)));
+        }
+    }
+
     private CourierPage page(String address) throws Exception {
         return new CourierPage(address, createPdfPage());
     }
@@ -92,5 +122,11 @@ class CourierPdfWriterTest {
         Row row = sheet.getRow(rowIndex);
 
         return (int) row.getCell(cellIndex).getNumericCellValue();
+    }
+
+    private int getPdfPagesCount(Path pdfFile) throws Exception {
+        try (PDDocument document = PDDocument.load(pdfFile.toFile())) {
+            return document.getNumberOfPages();
+        }
     }
 }

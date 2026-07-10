@@ -79,6 +79,7 @@ public final class AddressKeyNormalizer {
             .replaceAll("(?iu)\\bкорпус\\b", "к")
             .replaceAll("(?iu)\\bкорп\\.?\\b", "к")
             .replaceAll("(?iu)\\bк\\.?\\b", "к")
+            .replaceAll("(?iu)\\bблок\\b", "блок")
             .replaceAll("(?iu)\\bстроение\\b", "стр")
             .replaceAll("(?iu)\\bстр\\.?\\b", "стр")
             .replaceAll("(?iu)\\bлитера\\b", "лит")
@@ -110,6 +111,7 @@ public final class AddressKeyNormalizer {
         String address = AddressCleaner.cleanup(chooseAddressPart(value));
 
         address = removeCityPrefix(address);
+        address = normalizeStreetTypeSuffix(address);
         address = removeAdministrativePrefix(address);
         address = removeFlat(address);
         address = removeTrailingFlat(address);
@@ -118,6 +120,8 @@ public final class AddressKeyNormalizer {
             .replaceAll("(?iu)(\\d+)\\s*/\\s*(?:лит\\.?|литера)\\s*\\.?\\s*([а-яa-z]).*$", "$1$2")
             .replaceAll("(?iu)(\\d+\\s*[а-яa-z]?)\\s*,\\s*([а-яa-z\\d]+)\\s*(?:корпус|корп\\.?)\\b", "$1 корп. $2")
             .replaceAll("(?iu)(\\d+)\\s*/\\s*(?:корпус|корп\\.?)\\s*([а-яa-z\\d]+)", "$1 корп. $2")
+            .replaceAll("(?iu)(\\d+\\s*[а-яa-z]?)\\s*(корпус|корп\\.?)\\s*([а-яa-z\\d]+)", "$1 корп. $3")
+            .replaceAll("(?iu)(\\d+\\s*[а-яa-z]?)\\s*блок\\s*([а-яa-z\\d]+)", "$1 блок $2")
             .replaceAll("(?iu)(?:,|/)\\s*(?:корпус|корп\\.?|к\\.?)\\s*([а-яa-z\\d]+)", " корп. $1")
             .replaceAll("(?iu)(\\d+\\s*[а-яa-z])\\s*\\.\\s*[а-яa-z]\\b", "$1")
             .replaceAll("(?iu)(\\d+\\s*[а-яa-z]?)\\s*/\\s*(?!(?:\\d+|лит\\.?|литера|корпус|корп\\.?)\\b)[^,\\s]+", "$1")
@@ -145,6 +149,21 @@ public final class AddressKeyNormalizer {
 
     private static String removeAdministrativePrefix(String address) {
         return address.replaceFirst("(?iu)^.*?\\b(" + AddressPatterns.STREET_TYPE_PATTERN + ")\\b", "$1");
+    }
+
+    private static String normalizeStreetTypeSuffix(String address) {
+        java.util.regex.Matcher matcher = java.util.regex.Pattern.compile(
+            "(?iu)^\\s*((?:г\\.?\\s*[а-яёa-z-]+\\s*,\\s*)?)([^,]+?)\\s+("
+                + AddressPatterns.STREET_TYPE_PATTERN
+                + ")\\s*,\\s*((?:д\\.?|дом)\\s*.*)$"
+        ).matcher(address);
+
+        if (!matcher.matches()
+            || matcher.group(2).matches("(?iu).*\\b(" + AddressPatterns.STREET_TYPE_PATTERN + ")\\b.*")) {
+            return address;
+        }
+
+        return matcher.group(1) + matcher.group(3) + " " + matcher.group(2) + ", " + matcher.group(4);
     }
 
     /**

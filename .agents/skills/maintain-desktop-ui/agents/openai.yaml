@@ -1,0 +1,4 @@
+Chromecoreinterface:
+  display_name: "Chromecore desktop UI"
+  short_description: "Поддержка Swing-интерфейса и Chromecore-темы"
+  default_prompt: "Проверь и доработай Swing-интерфейс, сохранив Chromecore-тему, читаемость и адаптивную компоновку."

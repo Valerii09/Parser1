@@ -1,20 +1,21 @@
 package org.vc.ui.component;
 
+import org.vc.ui.theme.ChromeButton;
+import org.vc.ui.theme.ChromecoreTheme;
+
 import javax.swing.BorderFactory;
-import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
-import java.awt.Color;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 
 /**
- * Переиспользуемая панель выбора файла или каталога.
+ * Строка выбора файла или каталога, оформленная в едином стиле приложения.
  *
  * @author Valerii Trufanov
  * @since 18.05.2026
@@ -23,15 +24,19 @@ public class FileChooserPanel extends JPanel {
 
     private final JTextField pathField = new JTextField();
     private final int selectionMode;
+    private ChromeButton chooseButton;
 
-    
+    /**
+     * Создаёт строку с подписью, редактируемым путём и кнопкой системного диалога.
+     */
     public FileChooserPanel(String labelText, String buttonText, int selectionMode) {
         this.selectionMode = selectionMode;
-
         init(labelText, buttonText);
     }
 
-    
+    /**
+     * Возвращает введённый или выбранный пользователем путь без дополнительного преобразования.
+     */
     public String getSelectedPath() {
         return pathField.getText();
     }
@@ -40,36 +45,40 @@ public class FileChooserPanel extends JPanel {
         setLayout(new GridBagLayout());
         setOpaque(false);
 
-        JLabel label = new JLabel(labelText);
-        label.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 13));
+        JLabel label = new JLabel(labelText.toUpperCase());
+        label.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        label.setForeground(ChromecoreTheme.TEXT_SECONDARY);
 
-        pathField.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 13));
+        pathField.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        pathField.setForeground(ChromecoreTheme.TEXT_PRIMARY);
+        pathField.setDisabledTextColor(ChromecoreTheme.TEXT_SECONDARY);
+        pathField.setCaretColor(ChromecoreTheme.ACCENT);
+        pathField.setSelectionColor(ChromecoreTheme.ACCENT_DARK);
+        pathField.setSelectedTextColor(ChromecoreTheme.TEXT_PRIMARY);
+        pathField.setBackground(ChromecoreTheme.FIELD_BACKGROUND);
         pathField.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(210, 215, 225)),
-            new EmptyBorder(7, 8, 7, 8)
+            BorderFactory.createLineBorder(ChromecoreTheme.CHROME_DARK),
+            new EmptyBorder(9, 11, 9, 11)
         ));
 
-        JButton chooseButton = new JButton(buttonText);
-        chooseButton.setFocusPainted(false);
-        chooseButton.setBorder(new EmptyBorder(8, 14, 8, 14));
+        chooseButton = new ChromeButton(buttonText, false);
         chooseButton.addActionListener(event -> choosePath());
 
         GridBagConstraints constraints = new GridBagConstraints();
-        constraints.insets = new Insets(4, 4, 4, 4);
+        constraints.insets = new Insets(5, 5, 5, 5);
         constraints.fill = GridBagConstraints.HORIZONTAL;
 
         constraints.gridx = 0;
-        constraints.gridy = 0;
         constraints.weightx = 0;
+        constraints.ipadx = 8;
         add(label, constraints);
 
         constraints.gridx = 1;
-        constraints.gridy = 0;
         constraints.weightx = 1;
+        constraints.ipadx = 0;
         add(pathField, constraints);
 
         constraints.gridx = 2;
-        constraints.gridy = 0;
         constraints.weightx = 0;
         add(chooseButton, constraints);
     }
@@ -79,9 +88,16 @@ public class FileChooserPanel extends JPanel {
         chooser.setFileSelectionMode(selectionMode);
 
         int result = chooser.showOpenDialog(this);
-
         if (result == JFileChooser.APPROVE_OPTION) {
             pathField.setText(chooser.getSelectedFile().getAbsolutePath());
         }
+    }
+
+    /**
+     * Блокирует изменение пути на время фоновой обработки.
+     */
+    public void setSelectionEnabled(boolean enabled) {
+        pathField.setEnabled(enabled);
+        chooseButton.setEnabled(enabled);
     }
 }

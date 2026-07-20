@@ -12,6 +12,7 @@ $exeDirectory = Join-Path $targetRoot "exe-$OutputTag"
 $zipPath = Join-Path $targetRoot "PaymentCourierTool-$OutputTag.zip"
 $jarPath = Join-Path $targetRoot "payment-courier-tool.jar"
 $jpackage = Join-Path $JdkHome "bin\jpackage.exe"
+$iconPath = Join-Path $projectRoot "packaging\PaymentCourierTool.ico"
 
 function Assert-TargetPath([string]$Path) {
     $fullPath = [System.IO.Path]::GetFullPath($Path)
@@ -26,6 +27,9 @@ if (-not (Test-Path -LiteralPath $MavenCommand)) {
 }
 if (-not (Test-Path -LiteralPath $jpackage)) {
     throw "jpackage не найден: $jpackage"
+}
+if (-not (Test-Path -LiteralPath $iconPath)) {
+    throw "Иконка приложения не найдена: $iconPath"
 }
 
 Push-Location $projectRoot
@@ -54,6 +58,7 @@ try {
         --input $inputDirectory `
         --main-jar payment-courier-tool.jar `
         --main-class org.vc.ui.PaymentCourierToolApp `
+        --icon $iconPath `
         --app-version 1.0 `
         --java-options "-Xms256m" `
         --java-options "-XX:MaxRAMPercentage=50.0" `

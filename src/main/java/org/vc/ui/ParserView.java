@@ -31,6 +31,11 @@ public interface ParserView {
     PaymentSupplier getSelectedPaymentSupplier();
 
     /**
+     * Обновляет визуальное состояние текущей фоновой операции.
+     */
+    void showTaskState(ParserTaskState state, String message);
+
+    /**
      * Очищает область лога.
      */
     void clearLog();

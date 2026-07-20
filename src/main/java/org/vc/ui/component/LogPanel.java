@@ -1,10 +1,11 @@
 package org.vc.ui.component;
 
 import org.vc.ui.LogOutputStream;
+import org.vc.ui.theme.ChromePanel;
+import org.vc.ui.theme.ChromecoreTheme;
 
 import javax.swing.BorderFactory;
 import javax.swing.JLabel;
-import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.border.EmptyBorder;
@@ -15,21 +16,26 @@ import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 
 /**
- * Показывает вывод парсера внутри интерфейса.
+ * Показывает ограниченный по памяти журнал обработки в виде терминального блока.
  *
  * @author Valerii Trufanov
  * @since 18.05.2026
  */
-public class LogPanel extends JPanel {
+public class LogPanel extends ChromePanel {
 
     private final JTextArea logArea = new JTextArea();
 
-    
+    /**
+     * Создаёт терминальную область журнала с Chromecore-оформлением.
+     */
     public LogPanel() {
+        super(Style.CARD);
         init();
     }
 
-    
+    /**
+     * Удаляет текущую историю вывода из интерфейса.
+     */
     public void clear() {
         logArea.setText("");
     }
@@ -49,26 +55,25 @@ public class LogPanel extends JPanel {
     }
 
     private void init() {
-        setLayout(new BorderLayout());
-        setBackground(Color.WHITE);
-        setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(225, 229, 235)),
-            new EmptyBorder(10, 10, 10, 10)
-        ));
+        setLayout(new BorderLayout(0, 10));
+        setBorder(new EmptyBorder(13, 13, 13, 13));
 
-        JLabel title = new JLabel("Лог выполнения");
-        title.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 14));
-        title.setBorder(new EmptyBorder(0, 0, 8, 0));
+        JLabel title = new JLabel("●  ЖУРНАЛ ВЫПОЛНЕНИЯ // ПОСЛЕДНИЕ СОБЫТИЯ");
+        title.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        title.setForeground(ChromecoreTheme.SUCCESS);
 
         logArea.setEditable(false);
         logArea.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 13));
         logArea.setLineWrap(true);
         logArea.setWrapStyleWord(true);
-        logArea.setBackground(new Color(250, 251, 253));
-        logArea.setBorder(new EmptyBorder(8, 8, 8, 8));
+        logArea.setForeground(new Color(192, 224, 236));
+        logArea.setCaretColor(ChromecoreTheme.ACCENT);
+        logArea.setBackground(ChromecoreTheme.FIELD_BACKGROUND);
+        logArea.setBorder(new EmptyBorder(10, 12, 10, 12));
 
         JScrollPane scrollPane = new JScrollPane(logArea);
-        scrollPane.setBorder(BorderFactory.createLineBorder(new Color(225, 229, 235)));
+        scrollPane.getViewport().setBackground(ChromecoreTheme.FIELD_BACKGROUND);
+        scrollPane.setBorder(BorderFactory.createLineBorder(ChromecoreTheme.CHROME_DARK));
 
         add(title, BorderLayout.NORTH);
         add(scrollPane, BorderLayout.CENTER);

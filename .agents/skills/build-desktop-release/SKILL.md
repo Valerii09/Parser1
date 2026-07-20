@@ -13,6 +13,7 @@ description: Проверенная локальная сборка payment-cour
 4. Собрать `jpackage --type app-image`, а не installer.
 5. Упаковать всю директорию приложения в ZIP: один EXE без `runtime` и `app` не переносим.
 6. Проверить `PaymentCourierTool.cfg` и содержимое ZIP.
+7. Иконку EXE брать из `packaging/PaymentCourierTool.ico`; не выпускать приложение со стандартной Java-иконкой.
 
 Для стандартной сборки запускать `scripts/build-release.ps1` из корня проекта или по полному пути.
 

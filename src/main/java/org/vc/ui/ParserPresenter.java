@@ -65,7 +65,7 @@ public class ParserPresenter {
 
     
     public void createCourierAddresses() {
-        taskRunner.run(() -> {
+        taskRunner.run("Формирование адресов", () -> {
             Path excelPath = getRequiredPath(
                 view.getSelectedExcelPath(),
                 "Выберите Excel-файл с адресами"
@@ -88,7 +88,7 @@ public class ParserPresenter {
 
     
     public void createCourierPdfs() {
-        taskRunner.run(() -> {
+        taskRunner.run("Распределение PDF", () -> {
             Path pdfFolder = getRequiredPath(
                 view.getSelectedPdfFolderPath(),
                 "Выберите папку с PDF"

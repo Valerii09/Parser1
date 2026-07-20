@@ -1,5 +1,7 @@
 package org.vc.ui;
 
+import org.vc.ui.theme.ChromecoreTheme;
+
 import javax.swing.SwingUtilities;
 
 /**
@@ -16,6 +18,8 @@ public class PaymentCourierToolApp {
      * @param args аргументы командной строки
      */
     public static void main(String[] args) {
+        ChromecoreTheme.install();
+
         SwingUtilities.invokeLater(() -> {
             ParserFrame frame = new ParserFrame();
             frame.setVisible(true);

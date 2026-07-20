@@ -14,7 +14,9 @@ public class ParserTaskRunner {
     private final ParserView view;
     private final AtomicBoolean running = new AtomicBoolean(false);
 
-    
+    /**
+     * Создаёт исполнитель, который сообщает представлению обо всех состояниях задачи.
+     */
     public ParserTaskRunner(ParserView view) {
         this.view = view;
     }
@@ -23,18 +25,29 @@ public class ParserTaskRunner {
      * Запускает задачу асинхронно и показывает ошибки через интерфейс.
      */
     public void run(ParserTask task) {
+        run("Обработка данных", task);
+    }
+
+    /**
+     * Запускает именованную задачу и синхронизирует индикатор активности с её жизненным циклом.
+     */
+    public void run(String taskName, ParserTask task) {
         if (!running.compareAndSet(false, true)) {
             System.out.println("Задача уже выполняется, дождитесь завершения текущей операции.");
             Toolkit.getDefaultToolkit().beep();
             return;
         }
 
+        view.showTaskState(ParserTaskState.RUNNING, taskName);
+
         Thread thread = new Thread(() -> {
             try {
                 task.run();
+                view.showTaskState(ParserTaskState.SUCCESS, "Готово: " + taskName);
             } catch (Exception exception) {
                 exception.printStackTrace();
                 Toolkit.getDefaultToolkit().beep();
+                view.showTaskState(ParserTaskState.ERROR, "Ошибка: " + taskName);
                 view.showError(exception.getMessage());
             } finally {
                 running.set(false);

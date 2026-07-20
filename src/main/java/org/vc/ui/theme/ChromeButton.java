@@ -47,8 +47,8 @@ public class ChromeButton extends JButton {
         Color bottom = primary ? ChromecoreTheme.ACCENT_DARK : ChromecoreTheme.CHROME_MID;
 
         if (!isEnabled()) {
-            top = new Color(88, 98, 110);
-            bottom = new Color(49, 57, 68);
+            top = new Color(235, 239, 243);
+            bottom = new Color(196, 205, 213);
         } else if (getModel().isPressed()) {
             Color swap = top;
             top = bottom.darker();
@@ -67,7 +67,7 @@ public class ChromeButton extends JButton {
 
         setForeground(isEnabled()
             ? primary ? Color.WHITE : new Color(8, 15, 25)
-            : new Color(183, 192, 201));
+            : new Color(104, 116, 127));
         super.paintComponent(graphics);
     }
 }

@@ -10,19 +10,19 @@ import java.awt.Font;
  */
 public final class ChromecoreTheme {
 
-    public static final Color BACKGROUND_TOP = new Color(5, 9, 16);
-    public static final Color BACKGROUND_BOTTOM = new Color(20, 28, 40);
-    public static final Color PANEL_TOP = new Color(43, 52, 67);
-    public static final Color PANEL_BOTTOM = new Color(13, 19, 29);
-    public static final Color CHROME_LIGHT = new Color(238, 244, 249);
-    public static final Color CHROME_MID = new Color(137, 150, 166);
-    public static final Color CHROME_DARK = new Color(55, 65, 79);
-    public static final Color TEXT_PRIMARY = new Color(239, 246, 252);
-    public static final Color TEXT_SECONDARY = new Color(160, 177, 194);
-    public static final Color ACCENT = new Color(76, 203, 255);
-    public static final Color ACCENT_DARK = new Color(15, 91, 178);
-    public static final Color FIELD_BACKGROUND = new Color(6, 12, 21);
-    public static final Color SUCCESS = new Color(99, 255, 202);
+    public static final Color BACKGROUND_TOP = new Color(246, 249, 252);
+    public static final Color BACKGROUND_BOTTOM = new Color(218, 226, 234);
+    public static final Color PANEL_TOP = new Color(255, 255, 255);
+    public static final Color PANEL_BOTTOM = new Color(231, 237, 243);
+    public static final Color CHROME_LIGHT = new Color(255, 255, 255);
+    public static final Color CHROME_MID = new Color(184, 196, 207);
+    public static final Color CHROME_DARK = new Color(82, 101, 118);
+    public static final Color TEXT_PRIMARY = new Color(20, 30, 40);
+    public static final Color TEXT_SECONDARY = new Color(65, 82, 97);
+    public static final Color ACCENT = new Color(0, 147, 216);
+    public static final Color ACCENT_DARK = new Color(0, 91, 158);
+    public static final Color FIELD_BACKGROUND = Color.WHITE;
+    public static final Color SUCCESS = new Color(0, 112, 82);
 
     private ChromecoreTheme() {
     }
@@ -43,14 +43,35 @@ public final class ChromecoreTheme {
         UIManager.put("FileChooser.font", interfaceFont);
         UIManager.put("ToolTip.font", interfaceFont);
 
+        UIManager.put("control", PANEL_BOTTOM);
+        UIManager.put("info", PANEL_TOP);
+        UIManager.put("text", TEXT_PRIMARY);
+        UIManager.put("nimbusBase", CHROME_DARK);
+        UIManager.put("nimbusBlueGrey", CHROME_MID);
+        UIManager.put("nimbusFocus", ACCENT);
+        UIManager.put("nimbusLightBackground", FIELD_BACKGROUND);
+        UIManager.put("nimbusSelectionBackground", ACCENT_DARK);
+        UIManager.put("nimbusSelectedText", Color.WHITE);
+        UIManager.put("nimbusDisabledText", new Color(122, 132, 142));
+
+        UIManager.put("Label.foreground", TEXT_PRIMARY);
+        UIManager.put("Panel.background", PANEL_TOP);
+        UIManager.put("Panel.foreground", TEXT_PRIMARY);
         UIManager.put("ComboBox.background", FIELD_BACKGROUND);
         UIManager.put("ComboBox.foreground", TEXT_PRIMARY);
         UIManager.put("ComboBox.selectionBackground", ACCENT_DARK);
-        UIManager.put("ComboBox.selectionForeground", TEXT_PRIMARY);
-        UIManager.put("CheckBox.background", PANEL_BOTTOM);
+        UIManager.put("ComboBox.selectionForeground", Color.WHITE);
+        UIManager.put("CheckBox.background", PANEL_TOP);
         UIManager.put("CheckBox.foreground", TEXT_PRIMARY);
-        UIManager.put("OptionPane.background", PANEL_BOTTOM);
-        UIManager.put("Panel.background", PANEL_BOTTOM);
+        UIManager.put("TextField.background", FIELD_BACKGROUND);
+        UIManager.put("TextField.foreground", TEXT_PRIMARY);
+        UIManager.put("TextArea.background", FIELD_BACKGROUND);
+        UIManager.put("TextArea.foreground", TEXT_PRIMARY);
+        UIManager.put("ScrollPane.background", PANEL_TOP);
+        UIManager.put("Viewport.background", FIELD_BACKGROUND);
+        UIManager.put("OptionPane.background", PANEL_TOP);
+        UIManager.put("OptionPane.foreground", TEXT_PRIMARY);
+        UIManager.put("OptionPane.messageForeground", TEXT_PRIMARY);
     }
 
     private static void selectNimbusLookAndFeel() {

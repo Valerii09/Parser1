@@ -40,7 +40,7 @@ public class TaskActivityPanel extends JPanel {
         setLayout(new BorderLayout(0, 8));
         setPreferredSize(new Dimension(230, 74));
         setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(42, 72, 94)),
+            BorderFactory.createLineBorder(ChromecoreTheme.CHROME_DARK),
             new EmptyBorder(9, 12, 9, 12)
         ));
 
@@ -137,9 +137,9 @@ public class TaskActivityPanel extends JPanel {
             int height = getHeight();
             RoundRectangle2D track = new RoundRectangle2D.Float(0, 0, width - 1f, height - 1f, height, height);
 
-            g2.setColor(new Color(12, 24, 35, 150));
+            g2.setColor(new Color(177, 190, 201));
             g2.fill(track);
-            g2.setColor(new Color(44, 75, 96));
+            g2.setColor(ChromecoreTheme.CHROME_DARK);
             g2.setStroke(new BasicStroke(1f));
             g2.draw(track);
 

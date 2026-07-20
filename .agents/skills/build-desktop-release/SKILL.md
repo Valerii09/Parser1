@@ -15,7 +15,7 @@ description: Проверенная локальная сборка payment-cour
 6. Проверить `PaymentCourierTool.cfg` и содержимое ZIP.
 7. Иконку EXE брать из `packaging/PaymentCourierTool.ico`; не выпускать приложение со стандартной Java-иконкой.
 
-Для стандартной сборки запускать `scripts/build-release.ps1` из корня проекта или по полному пути.
+Для стандартной сборки запускать `.agents/skills/build-desktop-release/scripts/build-release.ps1` из корня проекта или по полному пути.
 
 ## Сохранять параметры рабочего режима
 

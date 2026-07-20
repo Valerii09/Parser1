@@ -57,10 +57,10 @@ public class ChromePanel extends JPanel {
 
         Color top = style == Style.ROOT
             ? ChromecoreTheme.BACKGROUND_TOP
-            : style == Style.HEADER ? new Color(224, 232, 239) : ChromecoreTheme.PANEL_TOP;
+            : style == Style.HEADER ? Color.WHITE : ChromecoreTheme.PANEL_TOP;
         Color bottom = style == Style.ROOT
             ? ChromecoreTheme.BACKGROUND_BOTTOM
-            : style == Style.HEADER ? new Color(91, 104, 121) : ChromecoreTheme.PANEL_BOTTOM;
+            : style == Style.HEADER ? new Color(205, 215, 224) : ChromecoreTheme.PANEL_BOTTOM;
 
         g2.setPaint(new GradientPaint(0, 0, top, 0, height, bottom));
         g2.fill(shape);
@@ -76,12 +76,12 @@ public class ChromePanel extends JPanel {
     }
 
     private void paintGrid(Graphics2D g2, int width, int height) {
-        g2.setColor(new Color(120, 190, 230, 12));
+        g2.setColor(new Color(45, 79, 104, 14));
         for (int y = 0; y < height; y += 6) {
             g2.drawLine(0, y, width, y);
         }
 
-        g2.setColor(new Color(76, 203, 255, 30));
+        g2.setColor(new Color(0, 121, 188, 42));
         g2.drawLine(0, 1, width, 1);
     }
 

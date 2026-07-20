@@ -10,7 +10,6 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.border.EmptyBorder;
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Font;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
@@ -66,7 +65,7 @@ public class LogPanel extends ChromePanel {
         logArea.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 13));
         logArea.setLineWrap(true);
         logArea.setWrapStyleWord(true);
-        logArea.setForeground(new Color(192, 224, 236));
+        logArea.setForeground(ChromecoreTheme.TEXT_PRIMARY);
         logArea.setCaretColor(ChromecoreTheme.ACCENT);
         logArea.setBackground(ChromecoreTheme.FIELD_BACKGROUND);
         logArea.setBorder(new EmptyBorder(10, 12, 10, 12));

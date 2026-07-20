@@ -4,7 +4,6 @@ import org.vc.address.PaymentSupplier;
 import org.vc.excel.CourierExcelReader;
 import org.vc.repository.CourierAddressWriter;
 import org.vc.service.CourierPaymentService;
-import org.vc.service.XmlPaymentPdfGenerationService;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -26,7 +25,6 @@ public class ParserPresenter {
     private final CourierExcelReader courierExcelReader;
     private final CourierAddressWriter courierAddressWriter;
     private final CourierPaymentService courierPaymentService;
-    private final XmlPaymentPdfGenerationService xmlPaymentPdfGenerationService;
 
     
     public ParserPresenter(
@@ -40,8 +38,7 @@ public class ParserPresenter {
             couriersRoot,
             new CourierExcelReader(),
             new CourierAddressWriter(),
-            new CourierPaymentService(),
-            new XmlPaymentPdfGenerationService()
+            new CourierPaymentService()
         );
     }
 
@@ -51,8 +48,7 @@ public class ParserPresenter {
         Path couriersRoot,
         CourierExcelReader courierExcelReader,
         CourierAddressWriter courierAddressWriter,
-        CourierPaymentService courierPaymentService,
-        XmlPaymentPdfGenerationService xmlPaymentPdfGenerationService
+        CourierPaymentService courierPaymentService
     ) {
         this.view = view;
         this.taskRunner = taskRunner;
@@ -60,7 +56,6 @@ public class ParserPresenter {
         this.courierExcelReader = courierExcelReader;
         this.courierAddressWriter = courierAddressWriter;
         this.courierPaymentService = courierPaymentService;
-        this.xmlPaymentPdfGenerationService = xmlPaymentPdfGenerationService;
     }
 
     
@@ -139,33 +134,6 @@ public class ParserPresenter {
         courierAddressWriter.write(couriersRoot, courierAddresses);
 
         System.out.println("Адреса курьеров обновлены из Excel");
-    }
-
-    
-    public void createPdfFromXml() {
-        taskRunner.run(() -> {
-            Path xmlFolder = getRequiredPath(
-                view.getSelectedXmlFolderPath(),
-                "Выберите папку с XML-файлами"
-            );
-
-            Path outputFolder = getRequiredPath(
-                view.getSelectedXmlOutputFolderPath(),
-                "Выберите папку для PDF из XML"
-            );
-
-            if (!Files.exists(xmlFolder)) {
-                throw new IllegalStateException("Папка с XML не найдена: " + xmlFolder);
-            }
-
-            System.out.println("Формирование PDF из XML...");
-            System.out.println("Папка с XML: " + xmlFolder);
-            System.out.println("Папка результата: " + outputFolder);
-
-            int generatedDocuments = xmlPaymentPdfGenerationService.generateFromFolder(xmlFolder, outputFolder, 1000);
-
-            System.out.println("PDF из XML сформированы. Платёжек: " + generatedDocuments);
-        });
     }
 
     private Path getRequiredPath(String value, String errorMessage) {

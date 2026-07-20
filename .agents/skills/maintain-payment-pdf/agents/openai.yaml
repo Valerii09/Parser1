@@ -1,4 +1,0 @@
-interface:
-  display_name: "Платёжки XML и PDF"
-  short_description: "XML, QR-коды и точная PDF-вёрстка"
-  default_prompt: "Используй $maintain-payment-pdf для изменения генерации платёжных PDF."

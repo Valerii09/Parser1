@@ -55,17 +55,6 @@ public class ParserFrame extends JFrame implements ParserView {
         JFileChooser.DIRECTORIES_ONLY
     );
 
-    private final FileChooserPanel xmlFolderChooserPanel = new FileChooserPanel(
-        "Папка с XML:",
-        "Выбрать папку",
-        JFileChooser.DIRECTORIES_ONLY
-    );
-
-    private final FileChooserPanel xmlOutputFolderChooserPanel = new FileChooserPanel(
-        "Куда сохранить PDF из XML:",
-        "Выбрать папку",
-        JFileChooser.DIRECTORIES_ONLY
-    );
     private final JCheckBox duplexPrintingCheckBox = new JCheckBox("Двусторонняя печать");
     private final JComboBox<PaymentSupplier> supplierComboBox = new JComboBox<>(PaymentSupplier.values());
     private final LogPanel logPanel = new LogPanel();
@@ -147,18 +136,12 @@ public class ParserFrame extends JFrame implements ParserView {
         constraints.gridy = 1;
         card.add(pdfFolderChooserPanel, constraints);
 
-        constraints.gridy = 2;
-        card.add(xmlFolderChooserPanel, constraints);
-
-        constraints.gridy = 3;
-        card.add(xmlOutputFolderChooserPanel, constraints);
-
         JPanel supplierPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
         supplierPanel.setOpaque(false);
         supplierPanel.add(new JLabel("Поставщик PDF:"));
         supplierPanel.add(supplierComboBox);
 
-        constraints.gridy = 4;
+        constraints.gridy = 2;
         constraints.insets = new Insets(4, 8, 10, 4);
         card.add(supplierPanel, constraints);
 
@@ -166,14 +149,14 @@ public class ParserFrame extends JFrame implements ParserView {
         duplexPrintingCheckBox.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 13));
         duplexPrintingCheckBox.setText("Двусторонняя печать — добавлять к платёжке следующую страницу без распознавания");
 
-        constraints.gridy = 5;
+        constraints.gridy = 3;
         constraints.insets = new Insets(4, 8, 10, 4);
         card.add(duplexPrintingCheckBox, constraints);
 
         JLabel resultLabel = new JLabel("Результат будет сохранён в: " + couriersRoot);
         resultLabel.setForeground(new Color(90, 90, 90));
 
-        constraints.gridy = 6;
+        constraints.gridy = 4;
         constraints.insets = new Insets(4, 8, 2, 4);
         card.add(resultLabel, constraints);
 
@@ -193,13 +176,9 @@ public class ParserFrame extends JFrame implements ParserView {
         JButton createPdfButton = createPrimaryButton("2. Сформировать PDF");
         createPdfButton.addActionListener(event -> presenter.createCourierPdfs());
 
-        JButton createXmlPdfButton = createPrimaryButton("XML → PDF");
-        createXmlPdfButton.addActionListener(event -> presenter.createPdfFromXml());
-
         panel.add(clearLogButton);
         panel.add(createAddressesButton);
         panel.add(createPdfButton);
-        panel.add(createXmlPdfButton);
 
         return panel;
     }
@@ -240,18 +219,6 @@ public class ParserFrame extends JFrame implements ParserView {
     @Override
     public String getSelectedPdfFolderPath() {
         return pdfFolderChooserPanel.getSelectedPath();
-    }
-
-    
-    @Override
-    public String getSelectedXmlFolderPath() {
-        return xmlFolderChooserPanel.getSelectedPath();
-    }
-
-    
-    @Override
-    public String getSelectedXmlOutputFolderPath() {
-        return xmlOutputFolderChooserPanel.getSelectedPath();
     }
 
     

@@ -27,9 +27,7 @@ public class ProcessingStats {
     private final Map<String, Integer> pagesByCourier = new LinkedHashMap<>();
 
     /**
-     * Устанавливает значение.
-     *
-     * @param foundPdfFiles новое значение
+     * Запоминает количество обнаруженных исходных файлов для итоговой сверки.
      */
     public synchronized void setFoundPdfFiles(int foundPdfFiles) {
         this.foundPdfFiles = foundPdfFiles;

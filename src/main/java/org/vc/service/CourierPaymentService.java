@@ -4,7 +4,6 @@ import org.vc.pdf.CourierPdfWriter;
 import org.vc.pdf.PdfPageTempStorage;
 import org.vc.repository.CourierAddressRepository;
 import org.vc.report.ProcessingStats;
-import org.apache.pdfbox.io.MemoryUsageSetting;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.vc.address.AddressExtractor;
@@ -23,7 +22,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -38,19 +36,12 @@ import java.util.stream.Stream;
  */
 public class CourierPaymentService {
 
-    // TEMP_FAST_MODE: временное ускорение под большую оперативную память.
-    // Откатить после срочной обработки: вернуть последовательную обработку PDF и setupTempFileOnly().
-    private static final boolean TEMP_FAST_MODE = true;
-    private static final int TEMP_FAST_PDF_THREADS = Integer.getInteger(
-        "paymentCourier.fast.pdfThreads",
-        Math.max(2, Math.min(12, Runtime.getRuntime().availableProcessors() - 1))
-    );
-
     private final CourierAddressRepository addressRepository = new CourierAddressRepository();
     private final CourierMatcher courierMatcher = new CourierMatcher();
     private final PdfPageTempStorage tempStorage = new PdfPageTempStorage();
     private final CourierPdfWriter pdfWriter = new CourierPdfWriter();
     private final UnmatchedAddressExcelWriter unmatchedAddressExcelWriter = new UnmatchedAddressExcelWriter();
+    private final PdfProcessingSettings settings = PdfProcessingSettings.systemDefaults();
 
     /**
      * Обрабатывает PDF-платёжки, распределяет страницы по курьерам и записывает все результаты.
@@ -70,8 +61,6 @@ public class CourierPaymentService {
     ) throws IOException {
         ProcessingStats stats = new ProcessingStats();
         UnmatchedAddressRegistry unmatchedAddressRegistry = new UnmatchedAddressRegistry();
-        AddressExtractor addressExtractor = new AddressExtractor(supplier);
-
         Map<String, Set<String>> courierAddresses = addressRepository.readCourierAddresses(couriersRoot);
 
         if (courierAddresses.isEmpty()) {
@@ -91,8 +80,7 @@ public class CourierPaymentService {
                 stats,
                 unmatchedAddressRegistry,
                 duplexPrinting,
-                addressExtractor,
-                supplier.isFirstAddressOnly()
+                supplier
             );
             pdfWriter.writeCourierPdfs(couriersRoot, courierPages, stats);
             unmatchedAddressExcelWriter.write(couriersRoot, unmatchedAddressRegistry);
@@ -128,8 +116,7 @@ public class CourierPaymentService {
         ProcessingStats stats,
         UnmatchedAddressRegistry unmatchedAddressRegistry,
         boolean duplexPrinting,
-        AddressExtractor addressExtractor,
-        boolean firstAddressOnly
+        PaymentSupplier supplier
     ) throws IOException {
         if (!Files.exists(pdfFolder)) {
             throw new IllegalStateException("Папка с PDF не найдена: " + pdfFolder);
@@ -140,16 +127,15 @@ public class CourierPaymentService {
 
         System.out.println("Найдено PDF-файлов: " + pdfFiles.size());
 
-        if (TEMP_FAST_MODE && pdfFiles.size() > 1) {
-            processPdfFilesFast(
+        if (settings.pdfThreads() > 1 && pdfFiles.size() > 1) {
+            processPdfFilesParallel(
                 pdfFiles,
                 courierPages,
                 tempRoot,
                 stats,
                 unmatchedAddressRegistry,
                 duplexPrinting,
-                addressExtractor,
-                firstAddressOnly
+                supplier
             );
             return;
         }
@@ -162,25 +148,23 @@ public class CourierPaymentService {
                 stats,
                 unmatchedAddressRegistry,
                 duplexPrinting,
-                addressExtractor,
-                firstAddressOnly
+                supplier
             );
         }
     }
 
-    private void processPdfFilesFast(
+    private void processPdfFilesParallel(
         List<Path> pdfFiles,
         Map<String, List<CourierPage>> courierPages,
         Path tempRoot,
         ProcessingStats stats,
         UnmatchedAddressRegistry unmatchedAddressRegistry,
         boolean duplexPrinting,
-        AddressExtractor addressExtractor,
-        boolean firstAddressOnly
+        PaymentSupplier supplier
     ) throws IOException {
-        int threads = Math.min(TEMP_FAST_PDF_THREADS, pdfFiles.size());
+        int threads = Math.min(settings.pdfThreads(), pdfFiles.size());
 
-        System.out.println("TEMP_FAST_MODE: параллельная обработка PDF, потоков: " + threads);
+        System.out.println("Параллельная обработка PDF: " + threads + " потока, кэш PDF хранится на диске");
 
         ExecutorService executor = Executors.newFixedThreadPool(threads);
         List<Future<?>> futures = new ArrayList<>();
@@ -194,18 +178,17 @@ public class CourierPaymentService {
                     stats,
                     unmatchedAddressRegistry,
                     duplexPrinting,
-                    addressExtractor,
-                    firstAddressOnly
+                    supplier
                 );
                 return null;
             }));
         }
 
         executor.shutdown();
-        waitFastTasks(futures);
+        waitTasks(futures);
     }
 
-    private void waitFastTasks(List<Future<?>> futures) throws IOException {
+    private void waitTasks(List<Future<?>> futures) throws IOException {
         for (Future<?> future : futures) {
             try {
                 future.get();
@@ -246,8 +229,7 @@ public class CourierPaymentService {
         ProcessingStats stats,
         UnmatchedAddressRegistry unmatchedAddressRegistry,
         boolean duplexPrinting,
-        AddressExtractor addressExtractor,
-        boolean firstAddressOnly
+        PaymentSupplier supplier
     ) throws IOException {
         System.out.println("Обрабатываю PDF: " + pdfFile);
 
@@ -255,10 +237,9 @@ public class CourierPaymentService {
 
         try (PDDocument sourceDocument = PDDocument.load(
             pdfFile.toFile(),
-            TEMP_FAST_MODE
-                ? MemoryUsageSetting.setupMainMemoryOnly()
-                : MemoryUsageSetting.setupTempFileOnly()
+            settings.sourceMemoryUsage(tempRoot)
         )) {
+            AddressExtractor addressExtractor = new AddressExtractor(supplier);
             PDFTextStripper textStripper = new PDFTextStripper();
             int pageCount = sourceDocument.getNumberOfPages();
 
@@ -273,8 +254,7 @@ public class CourierPaymentService {
                 );
             }
 
-            Map<String, Set<String>> contextualCouriersByAddress = new LinkedHashMap<>();
-            Map<Integer, Set<String>> contextualCouriersByPage = new LinkedHashMap<>();
+            PdfFileRoutingContext routingContext = new PdfFileRoutingContext();
             List<PendingPaymentDocument> pendingDocuments = new ArrayList<>();
 
             for (int pageIndex = 0; pageIndex < pageCount; pageIndex = getNextPaymentPageIndex(pageIndex, duplexPrinting)) {
@@ -294,7 +274,7 @@ public class CourierPaymentService {
                     continue;
                 }
 
-                if (firstAddressOnly) {
+                if (supplier.isFirstAddressOnly()) {
                     processPaymentDocument(
                         sourceDocument,
                         pdfFile,
@@ -310,8 +290,7 @@ public class CourierPaymentService {
                         1,
                         paymentDocumentsOnPage,
                         duplexPrinting,
-                        contextualCouriersByAddress,
-                        contextualCouriersByPage,
+                        routingContext,
                         pendingDocuments
                     );
                     continue;
@@ -333,8 +312,7 @@ public class CourierPaymentService {
                         paymentDocumentsOnPage,
                         1,
                         duplexPrinting,
-                        contextualCouriersByAddress,
-                        contextualCouriersByPage,
+                        routingContext,
                         pendingDocuments
                     );
                 }
@@ -349,8 +327,7 @@ public class CourierPaymentService {
                 unmatchedAddressRegistry,
                 courierPages,
                 duplexPrinting,
-                contextualCouriersByAddress,
-                contextualCouriersByPage,
+                routingContext,
                 pendingDocuments
             );
         }
@@ -371,8 +348,7 @@ public class CourierPaymentService {
         int paymentDocumentsOnPage,
         int registryPaymentDocumentsCount,
         boolean duplexPrinting,
-        Map<String, Set<String>> contextualCouriersByAddress,
-        Map<Integer, Set<String>> contextualCouriersByPage,
+        PdfFileRoutingContext routingContext,
         List<PendingPaymentDocument> pendingDocuments
     ) throws IOException {
         stats.addProcessedPages(registryPaymentDocumentsCount);
@@ -391,13 +367,7 @@ public class CourierPaymentService {
             return;
         }
 
-        rememberContext(
-            courierName,
-            pageIndex,
-            registryAddresses,
-            contextualCouriersByAddress,
-            contextualCouriersByPage
-        );
+        routingContext.remember(courierName, pageIndex, registryAddresses);
 
         writeMatchedPaymentDocument(
             sourceDocument,
@@ -458,23 +428,11 @@ public class CourierPaymentService {
         UnmatchedAddressRegistry unmatchedAddressRegistry,
         Map<String, List<CourierPage>> courierPages,
         boolean duplexPrinting,
-        Map<String, Set<String>> contextualCouriersByAddress,
-        Map<Integer, Set<String>> contextualCouriersByPage,
+        PdfFileRoutingContext routingContext,
         List<PendingPaymentDocument> pendingDocuments
     ) throws IOException {
         for (PendingPaymentDocument pending : pendingDocuments) {
-            String courierName = findContextCourier(
-                pending.registryAddresses(),
-                contextualCouriersByAddress
-            );
-
-            if (courierName == null) {
-                courierName = findNearestPageCourier(pending.pageIndex(), contextualCouriersByPage);
-            }
-
-            if (courierName == null) {
-                courierName = findDominantCourier(contextualCouriersByPage);
-            }
+            String courierName = routingContext.resolve(pending.registryAddresses(), pending.pageIndex());
 
             if (courierName == null) {
                 registerUnmatchedAddress(
@@ -492,13 +450,7 @@ public class CourierPaymentService {
                     + courierName + " / " + pending.address()
             );
 
-            rememberContext(
-                courierName,
-                pending.pageIndex(),
-                pending.registryAddresses(),
-                contextualCouriersByAddress,
-                contextualCouriersByPage
-            );
+            routingContext.remember(courierName, pending.pageIndex(), pending.registryAddresses());
 
             writeMatchedPaymentDocument(
                 sourceDocument,
@@ -516,91 +468,6 @@ public class CourierPaymentService {
                 courierName
             );
         }
-    }
-
-    private void rememberContext(
-        String courierName,
-        int pageIndex,
-        List<String> addresses,
-        Map<String, Set<String>> contextualCouriersByAddress,
-        Map<Integer, Set<String>> contextualCouriersByPage
-    ) {
-        contextualCouriersByPage
-            .computeIfAbsent(pageIndex, ignored -> new LinkedHashSet<>())
-            .add(courierName);
-
-        for (String address : addresses) {
-            String key = contextualAddressKey(address);
-            if (!key.isEmpty()) {
-                contextualCouriersByAddress
-                    .computeIfAbsent(key, ignored -> new LinkedHashSet<>())
-                    .add(courierName);
-            }
-        }
-    }
-
-    private String findContextCourier(
-        List<String> addresses,
-        Map<String, Set<String>> contextualCouriersByAddress
-    ) {
-        Set<String> couriers = new LinkedHashSet<>();
-        for (String address : addresses) {
-            Set<String> addressCouriers = contextualCouriersByAddress.get(contextualAddressKey(address));
-            if (addressCouriers != null) {
-                couriers.addAll(addressCouriers);
-            }
-        }
-        return couriers.size() == 1 ? couriers.iterator().next() : null;
-    }
-
-    private String findNearestPageCourier(
-        int pageIndex,
-        Map<Integer, Set<String>> contextualCouriersByPage
-    ) {
-        int nearestDistance = Integer.MAX_VALUE;
-        String nearestCourier = null;
-
-        for (Map.Entry<Integer, Set<String>> entry : contextualCouriersByPage.entrySet()) {
-            if (entry.getValue().size() != 1) {
-                continue;
-            }
-            int distance = Math.abs(entry.getKey() - pageIndex);
-            if (distance < nearestDistance || (distance == nearestDistance && entry.getKey() < pageIndex)) {
-                nearestDistance = distance;
-                nearestCourier = entry.getValue().iterator().next();
-            }
-        }
-        return nearestCourier;
-    }
-
-    private String findDominantCourier(Map<Integer, Set<String>> contextualCouriersByPage) {
-        Map<String, Integer> counts = new LinkedHashMap<>();
-        for (Set<String> couriers : contextualCouriersByPage.values()) {
-            if (couriers.size() == 1) {
-                counts.merge(couriers.iterator().next(), 1, Integer::sum);
-            }
-        }
-
-        return counts.entrySet().stream()
-            .max(Map.Entry.comparingByValue())
-            .map(Map.Entry::getKey)
-            .orElse(null);
-    }
-
-    private String contextualAddressKey(String address) {
-        CourierAddressKey key = CourierAddressKey.from(address);
-        String localityKey = key.localityFullHouseKey();
-        return localityKey.isEmpty() ? key.fullHouseKey() : localityKey;
-    }
-
-    private record PendingPaymentDocument(
-        int pageIndex,
-        String address,
-        List<String> registryAddresses,
-        int paymentDocumentIndex,
-        int paymentDocumentsOnPage,
-        int registryPaymentDocumentsCount
-    ) {
     }
 
     private int getNextPaymentPageIndex(int pageIndex, boolean duplexPrinting) {

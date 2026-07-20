@@ -21,16 +21,6 @@ public interface ParserView {
     String getSelectedPdfFolderPath();
 
     /**
-     * Возвращает путь к выбранной папке с XML-файлами.
-     */
-    String getSelectedXmlFolderPath();
-
-    /**
-     * Возвращает путь к выбранной папке результата для PDF из XML.
-     */
-    String getSelectedXmlOutputFolderPath();
-
-    /**
      * Возвращает признак включённой двусторонней печати.
      */
     boolean isDuplexPrintingSelected();

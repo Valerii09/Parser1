@@ -7,7 +7,7 @@ description: Проверенная локальная сборка payment-cour
 
 ## Выпускать только после проверки
 
-1. Запустить весь `mvn test`.
+1. Запустить весь `mvn clean test`, чтобы удалённые классы не попали в новый shaded JAR из старого `target/classes`.
 2. Собрать shaded JAR командой `mvn -DskipTests package`.
 3. Убедиться, что `target/payment-courier-tool.jar` обновлён.
 4. Собрать `jpackage --type app-image`, а не installer.
@@ -19,10 +19,10 @@ description: Проверенная локальная сборка payment-cour
 ## Сохранять параметры рабочего режима
 
 - Java 17.
-- `-Xms512m`.
-- `-XX:MaxRAMPercentage=80.0`.
-- `-DpaymentCourier.fast.pdfThreads=12`.
-- `-DpaymentCourier.fast.writerThreads=2`.
+- `-Xms256m`.
+- `-XX:MaxRAMPercentage=50.0`: на машине с 12 ГБ приложение не забирает память у ОС.
+- `-DpaymentCourier.pdfThreads=2`: два исходных PDF обрабатываются параллельно с дисковым scratch-кэшем.
+- Итоговые PDF собирать последовательно через `MemoryUsageSetting.setupTempFileOnly()`.
 - Не менять лимит 5000 страниц на выходной PDF без отдельного требования и теста.
 
 ## Не смешивать артефакты

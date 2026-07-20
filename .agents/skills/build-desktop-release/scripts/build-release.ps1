@@ -31,7 +31,7 @@ if (-not (Test-Path -LiteralPath $jpackage)) {
 Push-Location $projectRoot
 try {
     $env:JAVA_HOME = $JdkHome
-    & $MavenCommand test
+    & $MavenCommand clean test
     if ($LASTEXITCODE -ne 0) { throw "Тесты завершились с ошибкой" }
 
     & $MavenCommand -DskipTests package
@@ -55,10 +55,9 @@ try {
         --main-jar payment-courier-tool.jar `
         --main-class org.vc.ui.PaymentCourierToolApp `
         --app-version 1.0 `
-        --java-options "-Xms512m" `
-        --java-options "-XX:MaxRAMPercentage=80.0" `
-        --java-options "-DpaymentCourier.fast.pdfThreads=12" `
-        --java-options "-DpaymentCourier.fast.writerThreads=2"
+        --java-options "-Xms256m" `
+        --java-options "-XX:MaxRAMPercentage=50.0" `
+        --java-options "-DpaymentCourier.pdfThreads=2"
     if ($LASTEXITCODE -ne 0) { throw "Сборка EXE завершилась с ошибкой" }
 
     Assert-TargetPath $zipPath
